@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Escolar</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-main: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            margin: 0; 
+            background: var(--bg-main); 
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-main); display: flex; align-items: center;
+            justify-content: center; z-index: 2000;
+        }
+        .auth-card {
+            background: white; padding: 2.5rem; border-radius: 1.5rem;
+            box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center;
+        }
+
+        #main-app { display: none; }
+
+        .header { 
+            background: white; padding: 1rem 2.5rem; display: flex; 
+            align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 1rem; }
+        #logo-container {
+            width: 55px; height: 55px; border-radius: 12px;
+            object-fit: contain; background: #f8fafc;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px dashed #cbd5e1; cursor: pointer; transition: 0.3s;
+        }
+        #logo-img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+
+        .docente-box { text-align: right; }
+        #display-docente { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin: 0; }
+        #live-date { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+
+        .nav-container {
+            background: white; padding: 0 2.5rem;
+            display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+        .tab { 
+            padding: 1rem 0.5rem; cursor: pointer; color: var(--text-muted); 
+            font-weight: 600; font-size: 0.85rem; position: relative; transition: 0.3s;
+            white-space: nowrap;
+        }
+        .tab:hover { color: var(--primary); }
+        .tab.active { color: var(--primary); }
+        .tab.active::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%;
+            height: 3px; background: var(--primary); border-radius: 3px 3px 0 0;
+        }
+
+        .container { max-width: 1280px; margin: 2rem auto; padding: 0 2rem; }
+        .content { display: none; }
+        .content.active { display: block; animation: slideUp 0.4s ease-out; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { 
+            background: var(--card-bg); padding: 1.5rem; border-radius: 1rem; 
+            box-shadow: var(--shadow); margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.7);
+        }
+
+        .card-header { margin-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; }
+        .card-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: #1e293b; }
+
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+
+        input, select, textarea { padding: 0.6rem 1rem; border: 1px solid var(--border-color); border-radius: 0.6rem; font-size: 0.9rem; width: 100%; box-sizing: border-box; font-family: inherit; }
+
+        button { padding: 0.65rem 1.25rem; background: var(--primary); color: white; border: none; border-radius: 0.6rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.9rem; }
+        button:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); }
+        button.secondary { background: #f8fafc; color: #475569; border: 1px solid var(--border-color); }
+        button.danger { background: #fef2f2; color: var(--danger); }
+
+        .table-wrapper { border-radius: 0.75rem; border: 1px solid var(--border-color); overflow: hidden; background: white; margin-top: 1rem; width: 100%; }
+        table { width: 100% !important; border-collapse: collapse !important; margin: 0 !important; }
+        th { background: #f8fafc; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; padding: 1rem; text-align: left; }
+        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+
+        .grade-input { width: 65px; padding: 0.4rem; text-align: center; border-radius: 0.4rem; border: 1px solid #cbd5e1; font-weight: 600; }
+        .badge-pending { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; }
+        .reprobado-cell { background: #fee2e2 !important; color: #b91c1c !important; font-weight: 900 !important; }
+
+        .status-libreta { background-color: #e9d5ff !important; } 
+        .status-vacio { background-color: #fee2e2 !important; } 
+    </style>
+</head>
+<body>
+
+<div id="auth-overlay">
+    <div id="register-section" class="auth-card" style="display: none;">
+        <h2 style="margin-bottom: 0.5rem; font-weight: 800; color: var(--primary);">Configuración Inicial</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem;">Cree su cuenta de docente para comenzar</p>
+        <div style="text-align: left; margin-bottom: 1rem;">
+            <label style="font-size: 0.8rem; font-weight: 700;">Nombre Completo</label>
+            <input type="text" id="regNameInput" placeholder="Ej. Juan Pérez García" style="margin-top: 5px;">
+        </div>
+        <div style="text-align: left; margin-bottom: 2rem;">
+            <label style="font-size: 0.8rem; font-weight: 700;">Contraseña Nueva</label>
+            <input type="password" id="regPassInput" placeholder="••••" style="margin-top: 5px;">
+        </div>
+        <button onclick="handleRegister()" style="width: 100%; padding: 1rem;">Crear Cuenta e Ingresar</button>
+    </div>
+
+    <div id="login-section" class="auth-card" style="display: none;">
+        <h2 style="margin-bottom: 0.5rem; font-weight: 800; color: var(--primary);">Bienvenido Docente</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem;">Ingrese sus credenciales para acceder</p>
+        <div style="text-align: left; margin-bottom: 1rem;">
+            <label style="font-size: 0.8rem; font-weight: 700;">Usuario (Nombre Completo)</label>
+            <input type="text" id="userInput" placeholder="Su nombre registrado" style="margin-top: 5px;">
+        </div>
+        <div style="text-align: left; margin-bottom: 2rem;">
+            <label style="font-size: 0.8rem; font-weight: 700;">Contraseña</label>
+            <input type="password" id="passInput" placeholder="••••" style="margin-top: 5px;">
+        </div>
+        <button onclick="handleLogin()" style="width: 100%; padding: 1rem;">Ingresar al Sistema</button>
+        <p id="authError" style="color: red; font-size: 0.8rem; margin-top: 1rem; display: none;">Credenciales incorrectas</p>
+    </div>
+</div>
+
+<div id="main-app">
+    <div class="header">
+        <div class="header-brand">
+            <div id="logo-container" onclick="document.getElementById('logoInput').click()">
+                <img id="logo-img" src="" alt="">
+                <span id="logo-placeholder" style="font-size: 10px; text-align: center; color: #94a3b8;">+ Logo</span>
+            </div>
+            <div>
+                <h1 style="margin:0; font-size: 1.25rem; font-weight: 800;">SISTEMA DE GESTIÓN ACADÉMICA</h1>
+                <p style="margin:0; color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">CBT/EPO</p>
+            </div>
+        </div>
+        <div class="docente-box">
+            <input type="file" id="logoInput" hidden accept="image/*" onchange="uploadLogo(event)">
+            <div id="display-docente">DOCENTE: PROFESOR</div>
+            <div id="live-date">...</div>
+            <button onclick="handleLogout()" class="secondary" style="padding: 2px 8px; font-size: 10px; margin-top: 5px;">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="nav-container">
+        <div class="tab active" onclick="openTab(event,'grupos')">Configuración</div>
+        <div class="tab" onclick="openTab(event,'criterios_tab')">Criterios</div>
+        <div class="tab" onclick="openTab(event,'pase')">Asistencia</div>
+        <div class="tab" onclick="openTab(event,'registro_actividades')">Registro de Actividades</div>
+        <div class="tab" onclick="openTab(event,'resumen_evaluacion')">Resumen de Evaluación</div>
+        <div class="tab" onclick="openTab(event,'seguimiento_tab')">Seguimiento</div>
+        <div class="tab" onclick="openTab(event,'reportes')">Reportes</div>
+    </div>
+
+    <div class="container">
+        <div id="grupos" class="content active">
+            <div class="card">
+                <div class="card-header"><div class="card-title">📦 Gestión de Grupos</div></div>
+                <div class="grid-layout">
+                    <select id="groupSelect" onchange="syncSelection(this.value)"></select>
+                    <button class="danger" onclick="deleteGroup()">🗑️ Eliminar Seleccionado</button>
+                </div>
+                <div style="border-top: 1px dashed #e2e8f0; padding-top: 1.5rem;" class="grid-layout">
+                    <input type="text" id="groupName" placeholder="Ej: 302-B Informática">
+                    <button onclick="createGroup()">✨ Crear Nuevo Grupo</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><div class="card-title">👤 Registro de Alumnos</div></div>
+                <div class="grid-layout" style="grid-template-columns: 100px 1fr auto;">
+                    <input type="number" id="studentNumber" placeholder="No.">
+                    <input type="text" id="studentName" placeholder="Nombre completo">
+                    <button onclick="addStudent()">➕ Añadir</button>
+                </div>
+                <div style="background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 2rem; text-align: center;">
+                    <input type="file" id="excelUpload" accept=".xlsx,.xls" hidden onchange="importExcel(event)">
+                    <button class="secondary" onclick="document.getElementById('excelUpload').click()">📂 Importar desde Excel</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><div class="card-title">💾 Respaldo</div></div>
+                <button class="secondary" onclick="fullBackup()">📥 Exportar</button>
+                <button class="secondary" onclick="document.getElementById('restoreFile').click()">📤 Importar</button>
+                <input type="file" id="restoreFile" hidden onchange="restoreBackup(event)">
+            </div>
+        </div>
+
+        <div id="criterios_tab" class="content">
+            <div class="card">
+                <div class="card-header"><div class="card-title">🎯 Criterios de Evaluación</div></div>
+                <div class="grid-layout">
+                    <select id="groupSelectCriterios" onchange="syncSelection(this.value); renderCriterios();"></select>
+                    <input type="text" id="critName" placeholder="Nombre del Rubro">
+                    <input type="number" id="critPct" placeholder="Porcentaje %">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; background: #f8fafc; padding: 0 10px; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <input type="checkbox" id="critIsAct" style="width: 20px;">
+                        <label for="critIsAct" style="font-size: 0.8rem; font-weight: 700; white-space: nowrap;">¿ES ACTIVIDAD?</label>
+                    </div>
+                    <button onclick="addCriterio()">➕ Agregar</button>
+                </div>
+                <div id="criteriosTableContainer" class="table-wrapper"></div>
+                <div style="margin-top: 1rem; text-align: right; font-weight: 800;">TOTAL: <span id="totalCritPct">0%</span></div>
+            </div>
+        </div>
+
+        <div id="pase" class="content">
+            <div class="card">
+                <div class="card-header"><div class="card-title">📝 Registro de Asistencia</div></div>
+                <div class="grid-layout">
+                    <select id="groupSelectAttendance" onchange="syncSelection(this.value)"></select>
+                    <input type="date" id="attendanceDate">
+                    <button onclick="takeAttendance()">🔍 Consultar Lista</button>
+                </div>
+                <div id="quick-actions" style="display:none; margin-bottom: 1rem;">
+                     <button class="secondary" style="color: var(--success)" onclick="markAllPresent()">✔️ Marcar asistencia perfecta</button>
+                </div>
+                <div id="attendanceTableContainer" class="table-wrapper"></div>
+            </div>
+        </div>
+
+        <div id="registro_actividades" class="content">
+            <div class="card">
+                <div class="card-header"><div class="card-title">✍️ Alumnos Presentes con Pendientes</div></div>
+                <div class="card" style="background:#f8fafc; border:1px solid #e2e8f0; margin-bottom:1rem;">
+                    <label style="font-size: 0.75rem; font-weight: 700; color: var(--primary); display: block; margin-bottom: 5px;">ESCALA DEL DOCENTE:</label>
+                    <textarea id="teacherScale" placeholder="Escala..." rows="2" style="resize:none" onchange="data.groups[currentGroup].escala = this.value; saveData();"></textarea>
+                </div>
+                <div class="grid-layout">
+                    <select id="groupSelectRegAct" onchange="syncSelection(this.value); renderRegActTable();"></select>
+                    <select id="rubroSelect"></select>
+                    <input type="text" id="newActivityName" placeholder="Actividad">
+                    <button onclick="addActivity()">🚀 Crear</button>
+                </div>
+                <div id="regActTableContainer" class="table-wrapper" style="border:none"></div>
+                <div id="actReportActions" style="display:none; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                    <button onclick="exportActividadesPDF()" style="background:#ef4444">📕 PDF (Todo el Grupo)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="resumen_evaluacion" class="content">
+            <div class="card">
+                <div class="card-header"><div class="card-title">🏆 Resumen de Evaluación</div></div>
+                <div class="grid-layout">
+                    <select id="groupSelectResumen" onchange="syncSelection(this.value); renderResumenTable();"></select>
+                </div>
+                <div id="resumenTableContainer" class="table-wrapper" style="border:none"></div>
+                <div id="gradeExportActions" style="display:none; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                    <button onclick="exportGradesPDF()" style="background:#ef4444">📕 PDF</button>
+                    <button onclick="exportGradesExcel()" style="background:#22c55e">📗 Excel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="seguimiento_tab" class="content">
+            <div class="card">
+                <div class="card-header"><div class="card-title">📋 Formato de Seguimiento Oficial</div></div>
+                <div class="grid-layout" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                    <div>
+                        <label style="font-size:0.7rem; font-weight:bold;">GRUPO</label>
+                        <select id="groupSelectSeg" onchange="syncSelection(this.value); renderSeguimiento();"></select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem; font-weight:bold;">UAC (MATERIA)</label>
+                        <input type="text" id="uacNombre" placeholder="Nombre de la materia">
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem; font-weight:bold;">SEMANA DEL:</label>
+                        <input type="date" id="segSemana" onchange="renderSeguimiento()">
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem; font-weight:bold;">MIN. FALTAS</label>
+                        <input type="number" id="minFaltas" value="3" min="0" onchange="renderSeguimiento()">
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem; font-weight:bold;">MIN. ACTIVIDADES</label>
+                        <input type="number" id="minActs" value="2" min="0" onchange="renderSeguimiento()">
+                    </div>
+                    <div style="display:flex; align-items:flex-end;">
+                        <button onclick="exportSeguimientoPDF()" style="background:#ef4444; width:100%;">📕 Generar Formato</button>
+                    </div>
+                </div>
+                <div id="seguimientoTableContainer" class="table-wrapper"></div>
+            </div>
+        </div>
+
+        <div id="reportes" class="content">
+            <div class="card">
+                <div class="card-header"><div class="card-title">📊 Reportes de Asistencia</div></div>
+                <div class="grid-layout">
+                    <select id="groupSelectReport" onchange="syncSelection(this.value)"></select>
+                    <input type="date" id="startDate">
+                    <input type="date" id="endDate">
+                    <button onclick="generateReport()">⚡ Generar</button>
+                </div>
+                <div id="reportActions" style="display:none; gap: 1rem; margin: 1.5rem 0;">
+                    <button onclick="exportPDF()" style="background:#ef4444">📕 PDF</button>
+                    <button onclick="exportExcel()" style="background:#22c55e">📗 Excel</button>
+                </div>
+                <div id="reportTableArea" class="table-wrapper" style="border:none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("attendanceData")) || { groups:{}, logo: "", user: null, pass: null };
+
+function handleRegister() {
+    const name = document.getElementById('regNameInput').value.trim();
+    const pass = document.getElementById('regPassInput').value.trim();
+    if(!name || !pass) return alert("Por favor complete todos los campos");
+    data.user = name; data.pass = pass; saveData();
+    sessionStorage.setItem("isLoggedIn", "true");
+    sessionStorage.setItem("docenteName", name.toUpperCase());
+    showApp();
+}
+
+function handleLogin() {
+    const user = document.getElementById('userInput').value.trim();
+    const pass = document.getElementById('passInput').value.trim();
+    if(user === data.user && pass === data.pass) {
+        sessionStorage.setItem("isLoggedIn", "true");
+        sessionStorage.setItem("docenteName", user.toUpperCase());
+        showApp();
+    } else { document.getElementById('authError').style.display = "block"; }
+}
+
+function handleLogout() { sessionStorage.clear(); location.reload(); }
+
+function showApp() {
+    document.getElementById('auth-overlay').style.display = "none";
+    document.getElementById('main-app').style.display = "block";
+    document.getElementById('display-docente').textContent = "DOCENTE: " + sessionStorage.getItem("docenteName");
+    renderLogo(); updateDateOnly();
+}
+
+let currentGroup = "";
+function updateDateOnly() {
+    const now = new Date();
+    document.getElementById('live-date').textContent = now.toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'}).toUpperCase();
+}
+function saveData(){ localStorage.setItem("attendanceData", JSON.stringify(data)); }
+
+function uploadLogo(event) {
+    const reader = new FileReader();
+    reader.onload = (e) => { data.logo = e.target.result; saveData(); renderLogo(); };
+    reader.readAsDataURL(event.target.files[0]);
+}
+function renderLogo() {
+    const img = document.getElementById("logo-img");
+    const placeholder = document.getElementById("logo-placeholder");
+    if(data.logo) { img.src = data.logo; img.style.display = "block"; placeholder.style.display = "none"; }
+}
+
+function openTab(evt, tabId){
+    document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.getElementById(tabId).classList.add("active");
+    evt.currentTarget.classList.add("active");
+    loadSelectors();
+    if(tabId === 'registro_actividades') renderRegActTable();
+    if(tabId === 'resumen_evaluacion') renderResumenTable();
+    if(tabId === 'criterios_tab') renderCriterios();
+    if(tabId === 'seguimiento_tab') renderSeguimiento();
+}
+
+function loadSelectors(){
+    const selectors = ["groupSelect", "groupSelectAttendance", "groupSelectReport", "groupSelectRegAct", "groupSelectResumen", "groupSelectCriterios", "groupSelectSeg"];
+    selectors.forEach(id => {
+        let sel = document.getElementById(id); if(!sel) return;
+        sel.innerHTML = '<option value="">-- Grupo --</option>';
+        for(let g in data.groups) { let o = document.createElement("option"); o.value = g; o.text = g; sel.appendChild(o); }
+        if(currentGroup) sel.value = currentGroup;
+    });
+    loadRubros();
+}
+
+function loadRubros() {
+    let sel = document.getElementById("rubroSelect"); if(!sel) return;
+    sel.innerHTML = ''; 
+    if(currentGroup && data.groups[currentGroup].criterios) {
+        let rubrosActividad = data.groups[currentGroup].criterios.filter(c => c.isAct);
+        if (rubrosActividad.length === 0) { sel.innerHTML = '<option value="">-- Sin Rubros de Actividad --</option>'; return; }
+        rubrosActividad.forEach((c, idx) => {
+            let o = document.createElement("option"); o.value = c.name; o.text = c.name; 
+            if(idx === 0) o.selected = true; sel.appendChild(o);
+        });
+    } else { sel.innerHTML = '<option value="">-- Sin Criterios --</option>'; }
+}
+
+function syncSelection(val) { 
+    currentGroup = val; loadSelectors(); 
+    if(currentGroup && data.groups[currentGroup].escala){ document.getElementById('teacherScale').value = data.groups[currentGroup].escala; }
+    else if(currentGroup) { document.getElementById('teacherScale').value = ""; }
+}
+
+function createGroup(){
+    let name = document.getElementById("groupName").value.trim().toUpperCase();
+    if(!name) return alert("Ingrese un nombre para el grupo");
+    if(data.groups[name]) return alert("Este grupo ya existe");
+    
+    data.groups[name] = { 
+        students:[], 
+        attendance:{}, 
+        activities: [], 
+        criterios: [], 
+        manualGrades: {}, 
+        extraPoints: {}, 
+        escala: "" 
+    };
+    
+    saveData(); 
+    currentGroup = name; 
+    loadSelectors();
+    
+    if(document.getElementById("attendanceTableContainer")) {
+        document.getElementById("attendanceTableContainer").innerHTML = "";
+    }
+    document.getElementById("groupName").value = ""; 
+    alert("Grupo " + name + " creado. Recuerde agregar alumnos en esta misma pestaña.");
+}
+
+function deleteGroup(){
+    if(currentGroup && confirm(`Eliminar ${currentGroup}?`)){ delete data.groups[currentGroup]; currentGroup = ""; saveData(); loadSelectors(); }
+}
+
+function addStudent(){
+    if(!currentGroup) return alert("Seleccione un grupo primero");
+    let num = document.getElementById("studentNumber").value.trim();
+    let name = document.getElementById("studentName").value.trim().toUpperCase();
+    if(!num || !name) return alert("Complete datos del alumno");
+    data.groups[currentGroup].students.push({ num, name });
+    data.groups[currentGroup].students.sort((a,b) => a.num - b.num);
+    saveData();
+    alert("Alumno agregado");
+    document.getElementById("studentNumber").value = "";
+    document.getElementById("studentName").value = "";
+}
+
+function importExcel(event){
+    if(!currentGroup) return alert("Seleccione grupo primero");
+    let reader = new FileReader();
+    reader.onload = (e) => {
+        let wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+        let rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+        rows.forEach(r => {
+            let n = r.No || r.Numero; let nom = r.Nombre;
+            if(n && nom) data.groups[currentGroup].students.push({ num: n.toString(), name: nom.toString().toUpperCase() });
+        });
+        saveData(); alert("Importación exitosa");
+    };
+    reader.readAsArrayBuffer(event.target.files[0]);
+}
+
+function addCriterio() {
+    if(!currentGroup) return;
+    let name = document.getElementById("critName").value.trim().toUpperCase();
+    let pct = parseFloat(document.getElementById("critPct").value) || 0;
+    let isAct = document.getElementById("critIsAct").checked;
+    if(!name) return;
+    if(!data.groups[currentGroup].criterios) data.groups[currentGroup].criterios = [];
+    data.groups[currentGroup].criterios.push({ name, pct, isAct });
+    saveData(); renderCriterios(); loadRubros();
+}
+
+function deleteCriterio(idx) { data.groups[currentGroup].criterios.splice(idx, 1); saveData(); renderCriterios(); loadRubros(); }
+
+function renderCriterios() {
+    if(!currentGroup) return;
+    let group = data.groups[currentGroup];
+    let html = `<table><thead><tr><th>Rubro</th><th>Pct %</th><th>Tipo</th><th>Acción</th></tr></thead><tbody>`;
+    let total = 0;
+    (group.criterios || []).forEach((c, idx) => {
+        total += c.pct;
+        html += `<tr><td>${c.name}</td><td>${c.pct}%</td><td>${c.isAct?'ACTIVIDAD':'MANUAL'}</td>
+        <td><button class="danger" onclick="deleteCriterio(${idx})">Eliminar</button></td></tr>`;
+    });
+    document.getElementById("criteriosTableContainer").innerHTML = html + `</tbody></table>`;
+    document.getElementById("totalCritPct").textContent = total + "%";
+}
+
+function takeAttendance(){
+    let date = document.getElementById("attendanceDate").value;
+    if(!currentGroup) return alert("Seleccione un grupo");
+    if(!date) return alert("Seleccione una fecha");
+    
+    let group = data.groups[currentGroup];
+    if(!group.students || group.students.length === 0) {
+        document.getElementById("attendanceTableContainer").innerHTML = `<div style="padding:20px; color:red; text-align:center;">No hay alumnos registrados en este grupo.</div>`;
+        document.getElementById("quick-actions").style.display = "none";
+        return;
+    }
+
+    if(!group.attendance[date]) group.attendance[date] = {};
+    document.getElementById("quick-actions").style.display = "block";
+    renderAttendanceTable(date);
+}
+
+function renderAttendanceTable(date){
+    let group = data.groups[currentGroup];
+    let html = `<table><thead><tr><th>No.</th><th>Alumno</th><th>Asistencia</th><th>Causa</th></tr></thead><tbody>`;
+    group.students.forEach(s => {
+        if(!group.attendance[date][s.num]) group.attendance[date][s.num] = { present: false, obs: "" };
+        let r = group.attendance[date][s.num];
+        html += `<tr><td>${s.num}</td><td><b>${s.name}</b></td>
+            <td><input type="checkbox" ${r.present?'checked':''} onchange="updateAtt('${date}','${s.num}',this.checked)"></td>
+            <td><select onchange="updateObs('${date}','${s.num}',this.value)" ${r.present?'disabled':''}>
+                <option value="">-- MOTIVO --</option>
+                <option value="SALUD" ${r.obs==='SALUD'?'selected':''}>SALUD</option>
+                <option value="SIN MOTIVO" ${r.obs==='SIN MOTIVO'?'selected':''}>SIN MOTIVO</option>
+                <option value="APATIA" ${r.obs==='APATIA'?'selected':''}>APATÍA</option>
+                <option value="SOCIOEMOCIONAL" ${r.obs==='SOCIOEMOCIONAL'?'selected':''}>SOCIOEMOCIONAL</option>
+            </select></td></tr>`;
+    });
+    document.getElementById("attendanceTableContainer").innerHTML = html + `</tbody></table>`;
+}
+
+function updateAtt(d, n, v){ data.groups[currentGroup].attendance[d][n].present = v; saveData(); renderAttendanceTable(d); }
+function updateObs(d, n, v){ data.groups[currentGroup].attendance[d][n].obs = v; saveData(); }
+function markAllPresent() {
+    let d = document.getElementById("attendanceDate").value;
+    data.groups[currentGroup].students.forEach(s => data.groups[currentGroup].attendance[d][s.num] = { present: true, obs: "" });
+    saveData(); renderAttendanceTable(d);
+}
+
+function addActivity() {
+    let name = document.getElementById("newActivityName").value.trim();
+    let rubro = document.getElementById("rubroSelect").value;
+    if(!name || !rubro) return;
+    data.groups[currentGroup].activities.push({ name, rubro, grades: {} });
+    saveData(); renderRegActTable();
+}
+
+function renderRegActTable() {
+    if(!currentGroup) return;
+    let group = data.groups[currentGroup];
+    let selectedDate = document.getElementById("attendanceDate").value;
+    let attendanceForDate = group.attendance[selectedDate] || {};
+    
+    if ($.fn.DataTable.isDataTable('#regActTable')) $('#regActTable').DataTable().destroy();
+    document.getElementById("actReportActions").style.display = "flex";
+    
+    let html = `<table id="regActTable" class="display cell-border" style="width:100%"><thead><tr><th>No.</th><th>Alumno</th>`;
+    group.activities.forEach((act, idx) => {
+        html += `<th style="text-align:center">${act.name}<br><small>${act.rubro}</small><br><button onclick="deleteActivity(${idx})" style="background:red; color:white; border:none; font-size:8px; cursor:pointer">X</button></th>`;
+    });
+    html += `<th>Act. Pendientes</th></tr></thead><tbody>`;
+    
+    // FILTRO ACTUALIZADO: Solo alumnos presentes Y que tengan al menos un pendiente ("" o "L")
+    let listaFiltrada = group.students.filter(s => {
+        let estaPresente = attendanceForDate[s.num] && attendanceForDate[s.num].present;
+        if(!estaPresente) return false;
+
+        // Verificar si tiene al menos una actividad incompleta
+        let tienePendientes = group.activities.some(act => {
+            let val = (act.grades[s.num] || "").trim().toUpperCase();
+            return val === "" || val === "L";
+        });
+
+        return tienePendientes; 
+    });
+
+    listaFiltrada.forEach(s => {
+        let cells = ""; let pendingCount = 0;
+        group.activities.forEach((act, aIdx) => {
+            let val = (act.grades[s.num] || "").trim().toUpperCase();
+            let statusClass = "";
+            if(val === "L") { statusClass = "status-libreta"; pendingCount++; } 
+            else if(val === "") { statusClass = "status-vacio"; pendingCount++; }
+
+            cells += `<td class="${statusClass}"><input type="text" class="grade-input ${statusClass}" value="${val}" onchange="updateGrade(${aIdx},'${s.num}',this.value)"></td>`;
+        });
+        html += `<tr><td>${s.num}</td><td><b>${s.name}</b></td>${cells}<td style="text-align:center"><span class="badge-pending">${pendingCount}</span></td></tr>`;
+    });
+    document.getElementById("regActTableContainer").innerHTML = html + "</tbody></table>";
+    setTimeout(() => { $('#regActTable').DataTable({ paging: false, scrollX: true }); }, 10);
+}
+
+function updateGrade(aIdx, sNum, val) { 
+    data.groups[currentGroup].activities[aIdx].grades[sNum] = val.trim().toUpperCase(); 
+    saveData(); renderRegActTable(); 
+}
+
+function deleteActivity(idx) { if(confirm("¿Eliminar?")) { data.groups[currentGroup].activities.splice(idx,1); saveData(); renderRegActTable(); } }
+
+function exportActividadesPDF() {
+    const { jsPDF } = window.jspdf;
+    let doc = new jsPDF('l', 'mm', 'a4'); 
+    let group = data.groups[currentGroup];
+    let docente = sessionStorage.getItem("docenteName") || "DOCENTE";
+    let escala = document.getElementById('teacherScale').value || "N/A";
+
+    doc.setFontSize(14);
+    doc.text(`REGISTRO COMPLETO DE ACTIVIDADES - GRUPO: ${currentGroup}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Docente: ${docente}`, 14, 22);
+    doc.text(`Escala: ${escala}`, 14, 28);
+
+    let headers = [['No.', 'Nombre del Alumno']];
+    group.activities.forEach(act => headers[0].push(`${act.name}\n(${act.rubro})`));
+
+    let bodyRows = group.students.map(s => {
+        let row = [s.num, s.name];
+        group.activities.forEach(act => row.push(act.grades[s.num] || ""));
+        return row;
+    });
+
+    doc.autoTable({
+        startY: 35,
+        head: headers,
+        body: bodyRows,
+        theme: 'grid',
+        styles: { fontSize: 7, halign: 'center', cellPadding: 1 },
+        headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+        columnStyles: { 1: { halign: 'left', cellWidth: 50 } },
+        didDrawCell: (data) => {
+            if (data.section === 'body' && data.column.index > 1) {
+                let cellValue = data.cell.raw ? data.cell.raw.toString().toUpperCase() : "";
+                if (cellValue === 'L') {
+                    doc.setFillColor(233, 213, 255); 
+                    doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('L', data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1, { align: 'center' });
+                } else if (cellValue === '') {
+                    doc.setFillColor(254, 226, 226); 
+                    doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+                }
+            }
+        }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("NOTA PARA EL PADRE DE FAMILIA O TUTOR:", 14, finalY);
+    doc.setFont("helvetica", "normal");
+    
+    doc.setFillColor(233, 213, 255);
+    doc.rect(14, finalY + 4, 4, 4, 'F');
+    doc.text("Lila (L): El estudiante no presentó la libreta a clase.", 20, finalY + 7);
+    
+    doc.setFillColor(254, 226, 226);
+    doc.rect(14, finalY + 10, 4, 4, 'F');
+    doc.text("Rojo Claro (Vacío): El estudiante no entregó la actividad solicitada.", 20, finalY + 13);
+
+    doc.save(`Reporte_Actividades_Completo_${currentGroup}.pdf`);
+}
+
+function renderResumenTable() {
+    if(!currentGroup) return;
+    document.getElementById("gradeExportActions").style.display = "flex";
+    let group = data.groups[currentGroup];
+    let criterios = group.criterios || [];
+    if ($.fn.DataTable.isDataTable('#resumenTable')) $('#resumenTable').DataTable().destroy();
+
+    let html = `<table id="resumenTable" class="display cell-border" style="width:100%"><thead><tr><th>No.</th><th>Alumno</th>`;
+    criterios.forEach(c => { html += `<th style="background:#f8fafc; font-weight:700; text-align:center">${c.name} (${c.pct}%)</th>`; });
+    html += `<th style="background:#f59e0b; color:white; text-align:center">PUNTOS EXTRA</th>`;
+    html += `<th style="background:#4f46e5; color:white; text-align:center">PROMEDIO</th>`;
+    html += `<th style="background:#10b981; color:white; text-align:center">CALIF. FINAL</th></tr></thead><tbody>`;
+
+    group.students.forEach(s => {
+        let final = 0; let critCells = "";
+        criterios.forEach(c => {
+            let valor = 0;
+            if(c.isAct) {
+                let suma = 0;
+                let actsDelRubro = group.activities.filter(a => a.rubro === c.name);
+                actsDelRubro.forEach(act => {
+                    let v = (act.grades[s.num] || "").trim().toUpperCase();
+                    let n = (v === "" || v === "L") ? 0 : (parseFloat(v) || 0);
+                    suma += n;
+                });
+                valor = actsDelRubro.length > 0 ? (suma / actsDelRubro.length) : 0;
+                critCells += `<td style="text-align:center; font-weight:700">${valor.toFixed(1)}</td>`;
+            } else {
+                if(!group.manualGrades) group.manualGrades = {};
+                if(!group.manualGrades[c.name]) group.manualGrades[c.name] = {};
+                valor = parseFloat(group.manualGrades[c.name][s.num]) || 0;
+                critCells += `<td><input type="number" class="grade-input manual-input" value="${valor}" onchange="updateManualGrade('${c.name}','${s.num}',this.value)"></td>`;
+            }
+            final += (valor * (c.pct / 100));
+        });
+
+        if(!group.extraPoints) group.extraPoints = {};
+        let extra = parseFloat(group.extraPoints[s.num]) || 0;
+        let finalConExtra = Math.min(final + extra, 10);
+        let califFinal = finalConExtra < 6.0 ? 5 : Math.round(finalConExtra);
+
+        html += `<tr><td>${s.num}</td><td><b>${s.name}</b></td>${critCells}
+            <td><input type="number" class="grade-input extra-input" value="${extra}" onchange="updateExtraPoints('${s.num}',this.value)"></td>
+            <td style="text-align:center; font-weight:800;">${finalConExtra.toFixed(1)}</td>
+            <td class="${califFinal<6?'reprobado-cell':''}" style="text-align:center; font-weight:900;">${califFinal}</td></tr>`;
+    });
+    document.getElementById("resumenTableContainer").innerHTML = html + "</tbody></table>";
+    setTimeout(() => { $('#resumenTable').DataTable({ paging: false, scrollX: true }); }, 10);
+}
+
+function updateManualGrade(cName, sNum, val) { 
+    if(!data.groups[currentGroup].manualGrades[cName]) data.groups[currentGroup].manualGrades[cName] = {};
+    data.groups[currentGroup].manualGrades[cName][sNum] = val; saveData(); renderResumenTable(); 
+}
+function updateExtraPoints(sNum, val) {
+    if(!data.groups[currentGroup].extraPoints) data.groups[currentGroup].extraPoints = {};
+    data.groups[currentGroup].extraPoints[sNum] = val; saveData(); renderResumenTable();
+}
+
+function exportGradesPDF() {
+    const { jsPDF } = window.jspdf;
+    let doc = new jsPDF('l', 'mm', 'a4');
+    let group = data.groups[currentGroup];
+    let docente = sessionStorage.getItem("docenteName") || "DOCENTE";
+
+    doc.setFontSize(14);
+    doc.text(`RESUMEN DE EVALUACIÓN - GRUPO: ${currentGroup}`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Docente: ${docente}`, 14, 22);
+
+    doc.autoTable({
+        html: '#resumenTable',
+        startY: 30,
+        theme: 'grid',
+        styles: { fontSize: 8, halign: 'center' },
+        headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+        columnStyles: { 1: { halign: 'left' } },
+        didParseCell: function(data) {
+            if (data.cell.raw.getElementsByTagName) {
+                let input = data.cell.raw.getElementsByTagName('input')[0];
+                if (input) data.cell.text = [input.value];
+            }
+        }
+    });
+
+    doc.save(`Calificaciones_${currentGroup}.pdf`);
+}
+
+function exportGradesExcel() {
+    if(!currentGroup) return;
+    let group = data.groups[currentGroup];
+    let criterios = group.criterios || [];
+    let headers = ["No.", "Nombre del Alumno"];
+    criterios.forEach(c => headers.push(`${c.name} (${c.pct}%)`));
+    headers.push("PUNTOS EXTRA", "PROMEDIO", "CALIF. FINAL");
+
+    let rows = group.students.map(s => {
+        let rowData = [s.num, s.name];
+        let final = 0;
+        criterios.forEach(c => {
+            let valor = 0;
+            if(c.isAct) {
+                let suma = 0;
+                let actsDelRubro = group.activities.filter(a => a.rubro === c.name);
+                actsDelRubro.forEach(act => {
+                    let v = (act.grades[s.num] || "").trim().toUpperCase();
+                    let n = (v === "" || v === "L") ? 0 : (parseFloat(v) || 0);
+                    suma += n;
+                });
+                valor = actsDelRubro.length > 0 ? (suma / actsDelRubro.length) : 0;
+            } else {
+                valor = parseFloat(group.manualGrades[c.name][s.num]) || 0;
+            }
+            rowData.push(valor.toFixed(1));
+            final += (valor * (c.pct / 100));
+        });
+
+        let extra = parseFloat(group.extraPoints[s.num]) || 0;
+        let finalConExtra = Math.min(final + extra, 10);
+        let califFinal = finalConExtra < 6.0 ? 5 : Math.round(finalConExtra);
+        rowData.push(extra, finalConExtra.toFixed(1), califFinal);
+        return rowData;
+    });
+
+    let wb = XLSX.utils.book_new();
+    let ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    XLSX.utils.book_append_sheet(wb, ws, "Calificaciones");
+    XLSX.writeFile(wb, `Calificaciones_${currentGroup}.xlsx`);
+}
+
+function renderSeguimiento() {
+    if(!currentGroup) return;
+    let group = data.groups[currentGroup];
+    let mFaltas = parseInt(document.getElementById("minFaltas").value) || 0;
+    let mActs = parseInt(document.getElementById("minActs").value) || 0;
+
+    let html = `<table id="seguimientoTable"><thead><tr>
+        <th style="width:200px">Nombre del Alumno</th>
+        <th>Tipo Problemática</th>
+        <th>Estrategia de Seguimiento</th>
+        <th>No. Reporte</th>
+    </tr></thead><tbody>`;
+    
+    group.students.forEach(s => {
+        let faltas = 0;
+        Object.values(group.attendance).forEach(dia => { if(dia[s.num] && !dia[s.num].present) faltas++; });
+        let pendsNombres = [];
+        group.activities.forEach(act => { 
+            let v = (act.grades[s.num] || "").trim().toUpperCase();
+            if(v === "" || v === "L") pendsNombres.push(act.name);
+        });
+
+        if(faltas >= mFaltas || pendsNombres.length >= mActs) {
+            html += `<tr data-num="${s.num}">
+                <td class="st-nombre"><b>${s.name}</b></td>
+                <td>
+                    <select class="st-tipo">
+                        <option value="ACADEMICO">Académico</option>
+                        <option value="CONDUCTUAL">Conductual</option>
+                    </select>
+                </td>
+                <td><input type="text" class="st-estrategia" placeholder="Escribe estrategia aquí..."></td>
+                <td><input type="text" class="st-reporte" style="width:50px"></td>
+                <td class="st-data-auto" style="display:none">Faltas: ${faltas}. Pendientes: ${pendsNombres.join(', ') || 'Ninguna'}</td>
+            </tr>`;
+        }
+    });
+    document.getElementById("seguimientoTableContainer").innerHTML = html + "</tbody></table>";
+}
+
+function exportSeguimientoPDF() {
+    const { jsPDF } = window.jspdf;
+    let doc = new jsPDF('l', 'mm', 'a4');
+    let group = data.groups[currentGroup];
+    let docente = sessionStorage.getItem("docenteName") || "NO REGISTRADO";
+    let semana = document.getElementById("segSemana").value || "____/____/____";
+    let uac = document.getElementById("uacNombre").value || "_________________________";
+
+    doc.setFontSize(10); doc.setFont("helvetica", "bold");
+    doc.text("CENTRO DE BACHILLERATO TECNOLÓGICO NO. 5 HUEHUETOCA", 148, 10, {align: "center"});
+    doc.text("Subdirección académica", 148, 15, {align: "center"});
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.text("Ciclo escolar 2025-2026", 148, 20, {align: "center"});
+    doc.setFont("helvetica", "bold"); doc.text("FORMATO DE SEGUIMIENTO", 148, 25, {align: "center"});
+
+    doc.setFontSize(9);
+    doc.text(`Docente: ${docente}`, 15, 35);
+    doc.text(`UAC (Materia): ${uac}`, 15, 40);
+    doc.text(`Grado/Grupo: ${currentGroup}`, 15, 45);
+    doc.text(`Semana: ${semana}`, 15, 50);
+
+    let bodyRows = [];
+    const filasPantalla = document.querySelectorAll("#seguimientoTable tbody tr");
+    filasPantalla.forEach(tr => {
+        bodyRows.push([
+            tr.querySelector(".st-nombre").innerText, 
+            (tr.querySelector(".st-tipo").value === "ACADEMICO" ? "X" : ""), 
+            (tr.querySelector(".st-tipo").value === "CONDUCTUAL" ? "X" : ""), 
+            "", 
+            tr.querySelector(".st-estrategia").value, 
+            tr.querySelector(".st-data-auto").innerText, 
+            tr.querySelector(".st-reporte").value
+        ]);
+    });
+    while(bodyRows.length < 5) bodyRows.push(["", "", "", "", "", "", ""]);
+
+    doc.autoTable({
+        startY: 55,
+        head: [
+            [{content: 'Nombre del alumno.', rowSpan: 2}, {content: 'Problemática identificada.', colSpan: 2}, {content: 'SEGUIMIENTO', colSpan: 4}],
+            ['Académico.', 'Conductual.', 'Firma del alumno.', 'Estrategia de seguimiento.', 'Observaciones.', 'No. de reporte.']
+        ],
+        body: bodyRows,
+        theme: 'grid',
+        styles: { fontSize: 7, halign: 'center', textColor: 0, lineWidth: 0.1, cellPadding: 2 },
+        headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' },
+        columnStyles: { 0: { halign: 'left', cellWidth: 50 }, 4: { halign: 'left', cellWidth: 50 }, 5: { halign: 'left', cellWidth: 70 } }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 20;
+    doc.line(15, finalY, 75, finalY); doc.text("Orientador(a)", 45, finalY + 5, {align:"center"});
+    doc.line(110, finalY, 180, finalY); doc.text("Firma del Docente", 145, finalY + 5, {align:"center"});
+    doc.line(220, finalY, 280, finalY); doc.text("Subdirección Académica", 250, finalY + 5, {align:"center"});
+    doc.save(`Seguimiento_${currentGroup}.pdf`);
+}
+
+function generateReport(){
+    let start = document.getElementById("startDate").value;
+    let end = document.getElementById("endDate").value;
+    let group = data.groups[currentGroup];
+    let dates = Object.keys(group.attendance).filter(d => d >= start && d <= end).sort();
+    let html = `<table id="reportDataTable" class="display cell-border" style="width:100%"><thead><tr><th>No.</th><th>Nombre</th>${dates.map(d => `<th>${d}</th>`).join('')}<th>% Asist.</th></tr></thead><tbody>`;
+    group.students.forEach(s => {
+        let p = 0; let row = `<tr><td>${s.num}</td><td><b>${s.name}</b></td>`;
+        dates.forEach(d => {
+            let r = group.attendance[d][s.num];
+            if(r && r.present) { p++; row += `<td style="color:green; font-weight:bold; text-align:center">A</td>`; }
+            else { 
+                let razon = (r && r.obs) ? `F - ${r.obs}` : 'F';
+                row += `<td style="color:red; text-align:center; font-size: 0.8rem;">${razon}</td>`; 
+            }
+        });
+        html += row + `<td style="font-weight:800; text-align:center">${dates.length?((p/dates.length)*100).toFixed(0):0}%</td></tr>`;
+    });
+    document.getElementById("reportTableArea").innerHTML = html + "</tbody></table>";
+    document.getElementById("reportActions").style.display = "flex";
+    setTimeout(() => { $('#reportDataTable').DataTable({ paging: false, scrollX: true }); }, 10);
+}
+
+function exportPDF(){
+    const { jsPDF } = window.jspdf; let doc = new jsPDF('l');
+    doc.text(`ASISTENCIA - ${currentGroup}`, 14, 15);
+    doc.autoTable({ html: '#reportDataTable', startY: 20, styles: { fontSize: 6 } });
+    doc.save(`Asistencia_${currentGroup}.pdf`);
+}
+
+function fullBackup(){
+    let blob = new Blob([JSON.stringify(data)], {type:"application/json"});
+    let a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = `CBT5_Respaldo.json`; a.click();
+}
+
+function restoreBackup(event){
+    let reader = new FileReader();
+    reader.onload = (e) => { data = JSON.parse(e.target.result); saveData(); location.reload(); };
+    reader.readAsText(event.target.files[0]);
+}
+
+window.onload = () => {
+    if(!data.user) { document.getElementById('register-section').style.display = "block"; }
+    else { if(sessionStorage.getItem("isLoggedIn") === "true") { showApp(); } else { document.getElementById('login-section').style.display = "block"; } }
+    loadSelectors();
+    document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+};
+</script>
+</body>
+</html>
