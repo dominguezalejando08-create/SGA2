@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Escolar</title>
+    <title>SGA - Control Escolar</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%234f46e5%22><path d=%22M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3zm0 6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z%22/></svg>">
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -56,13 +57,18 @@
         }
 
         .header-brand { display: flex; align-items: center; gap: 1rem; }
-        #logo-container {
-            width: 55px; height: 55px; border-radius: 12px;
-            object-fit: contain; background: #f8fafc;
-            display: flex; align-items: center; justify-content: center;
-            border: 2px dashed #cbd5e1; cursor: pointer; transition: 0.3s;
+
+        .app-icon {
+            width: 45px;
+            height: 45px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
         }
-        #logo-img { max-width: 100%; max-height: 100%; border-radius: 8px; }
 
         .docente-box { text-align: right; }
         #display-docente { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin: 0; }
@@ -114,52 +120,123 @@
         td { padding: 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
 
         .grade-input { width: 65px; padding: 0.4rem; text-align: center; border-radius: 0.4rem; border: 1px solid #cbd5e1; font-weight: 600; }
-        .badge-pending { background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; }
         .reprobado-cell { background: #fee2e2 !important; color: #b91c1c !important; font-weight: 900 !important; }
 
         .status-libreta { background-color: #e9d5ff !important; } 
         .status-vacio { background-color: #fee2e2 !important; } 
+        
+        .parcial-selector {
+            background: #4f46e5;
+            color: white;
+            font-weight: 800;
+            border: none;
+        }
+
+        .semestral-header { background: #1e293b !important; color: white !important; }
+        .final-prom-cell { background: #f0f9ff; font-weight: 800; border-left: 2px solid #0ea5e9 !important; }
+        
+        .risk-alert { 
+            background: #fff7ed; 
+            color: #c2410c; 
+            font-weight: 800; 
+            font-size: 0.7rem; 
+            padding: 4px; 
+            border-radius: 4px; 
+            border: 1px solid #fdba74;
+            display: block;
+            text-align: center;
+        }
+
+        .group-img-preview {
+            max-height: 50px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .recovery-link {
+            display: block;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
 <div id="auth-overlay">
     <div id="register-section" class="auth-card" style="display: none;">
+        <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+             <div class="app-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+        </div>
         <h2 style="margin-bottom: 0.5rem; font-weight: 800; color: var(--primary);">Configuración Inicial</h2>
-        <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem;">Cree su cuenta de docente para comenzar</p>
-        <div style="text-align: left; margin-bottom: 1rem;">
-            <label style="font-size: 0.8rem; font-weight: 700;">Nombre Completo</label>
-            <input type="text" id="regNameInput" placeholder="Ej. Juan Pérez García" style="margin-top: 5px;">
+        <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.8rem;">Cree sus credenciales de acceso</p>
+        
+        <div style="text-align: left; margin-bottom: 0.5rem;">
+            <label style="font-size: 0.7rem; font-weight: 700;">Usuario (Acceso)</label>
+            <input type="text" id="regUserInput" placeholder="Ej. profr_juan">
         </div>
-        <div style="text-align: left; margin-bottom: 2rem;">
-            <label style="font-size: 0.8rem; font-weight: 700;">Contraseña Nueva</label>
-            <input type="password" id="regPassInput" placeholder="••••" style="margin-top: 5px;">
+        <div style="text-align: left; margin-bottom: 0.5rem;">
+            <label style="font-size: 0.7rem; font-weight: 700;">Nombre Completo (Formatos)</label>
+            <input type="text" id="regNameInput" placeholder="Ej. Juan Pérez García">
         </div>
-        <button onclick="handleRegister()" style="width: 100%; padding: 1rem;">Crear Cuenta e Ingresar</button>
+        <div style="text-align: left; margin-bottom: 0.5rem;">
+            <label style="font-size: 0.7rem; font-weight: 700;">Contraseña Nueva</label>
+            <input type="password" id="regPassInput" placeholder="••••">
+        </div>
+        <div style="text-align: left; margin-bottom: 1.5rem; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <p style="font-size: 0.65rem; font-weight: 800; margin-top: 0; color: var(--primary);">RECUPERACIÓN DE CUENTA:</p>
+            <label style="font-size: 0.65rem; font-weight: 700;">Pregunta Secreta</label>
+            <input type="text" id="regQuestion" placeholder="¿Nombre de tu mascota?" style="margin-bottom: 5px;">
+            <label style="font-size: 0.65rem; font-weight: 700;">Respuesta</label>
+            <input type="text" id="regAnswer" placeholder="Respuesta">
+        </div>
+        <button onclick="handleRegister()" style="width: 100%; padding: 1rem;">Guardar e Ingresar</button>
     </div>
 
     <div id="login-section" class="auth-card" style="display: none;">
+        <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+             <div class="app-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+        </div>
         <h2 style="margin-bottom: 0.5rem; font-weight: 800; color: var(--primary);">Bienvenido Docente</h2>
         <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem;">Ingrese sus credenciales para acceder</p>
         <div style="text-align: left; margin-bottom: 1rem;">
-            <label style="font-size: 0.8rem; font-weight: 700;">Usuario (Nombre Completo)</label>
-            <input type="text" id="userInput" placeholder="Su nombre registrado" style="margin-top: 5px;">
+            <label style="font-size: 0.8rem; font-weight: 700;">Usuario</label>
+            <input type="text" id="userInput" placeholder="Su usuario registrado">
         </div>
-        <div style="text-align: left; margin-bottom: 2rem;">
+        <div style="text-align: left; margin-bottom: 1.5rem;">
             <label style="font-size: 0.8rem; font-weight: 700;">Contraseña</label>
-            <input type="password" id="passInput" placeholder="••••" style="margin-top: 5px;">
+            <input type="password" id="passInput" placeholder="••••">
         </div>
         <button onclick="handleLogin()" style="width: 100%; padding: 1rem;">Ingresar al Sistema</button>
         <p id="authError" style="color: red; font-size: 0.8rem; margin-top: 1rem; display: none;">Credenciales incorrectas</p>
+        <span class="recovery-link" onclick="showRecovery()">¿Olvidaste tus datos de acceso?</span>
+    </div>
+
+    <div id="recovery-section" class="auth-card" style="display: none;">
+        <h2 style="margin-bottom: 0.5rem; font-weight: 800; color: var(--warning);">Recuperar Datos</h2>
+        <p id="displayQuestion" style="font-weight: 700; margin-bottom: 1.5rem;"></p>
+        <div style="text-align: left; margin-bottom: 1.5rem;">
+            <label style="font-size: 0.8rem; font-weight: 700;">Tu Respuesta</label>
+            <input type="text" id="recoveryAnswerInput" placeholder="Escribe tu respuesta">
+        </div>
+        <button onclick="handleRecovery()" style="width: 100%; padding: 1rem; background: var(--warning);">Ver mis datos</button>
+        <div id="recoveryResult" style="margin-top: 1.5rem; padding: 10px; background: #fffbeb; border: 1px solid #fef3c7; display: none; text-align: left; font-size: 0.85rem;">
+        </div>
+        <span class="recovery-link" onclick="backToLogin()">Volver al Inicio</span>
     </div>
 </div>
 
 <div id="main-app">
     <div class="header">
         <div class="header-brand">
-            <div id="logo-container" onclick="document.getElementById('logoInput').click()">
-                <img id="logo-img" src="" alt="">
-                <span id="logo-placeholder" style="font-size: 10px; text-align: center; color: #94a3b8;">+ Logo</span>
+            <div class="app-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
             <div>
                 <h1 style="margin:0; font-size: 1.25rem; font-weight: 800;">SISTEMA DE GESTIÓN ACADÉMICA</h1>
@@ -167,7 +244,6 @@
             </div>
         </div>
         <div class="docente-box">
-            <input type="file" id="logoInput" hidden accept="image/*" onchange="uploadLogo(event)">
             <div id="display-docente">DOCENTE: PROFESOR</div>
             <div id="live-date">...</div>
             <button onclick="handleLogout()" class="secondary" style="padding: 2px 8px; font-size: 10px; margin-top: 5px;">Cerrar Sesión</button>
@@ -175,23 +251,62 @@
     </div>
 
     <div class="nav-container">
-        <div class="tab active" onclick="openTab(event,'grupos')">Configuración</div>
-        <div class="tab" onclick="openTab(event,'criterios_tab')">Criterios</div>
-        <div class="tab" onclick="openTab(event,'pase')">Asistencia</div>
-        <div class="tab" onclick="openTab(event,'registro_actividades')">Registro de Actividades</div>
-        <div class="tab" onclick="openTab(event,'resumen_evaluacion')">Resumen de Evaluación</div>
-        <div class="tab" onclick="openTab(event,'seguimiento_tab')">Seguimiento</div>
-        <div class="tab" onclick="openTab(event,'reportes')">Reportes</div>
+        <div class="tab active" onclick="openTab(event,'grupos')">⚙️ Configuración</div>
+        <div class="tab" onclick="openTab(event,'criterios_tab')">🎯 Criterios de Evaluación</div>
+        <div class="tab" onclick="openTab(event,'pase')">📝 Asistencia</div>
+        <div class="tab" onclick="openTab(event,'registro_actividades')">✍️ Actividades</div>
+        <div class="tab" onclick="openTab(event,'resumen_evaluacion')">🏆 Evaluación</div>
+        <div class="tab" onclick="openTab(event,'seguimiento_tab')">📋 Seguimiento semanal</div>
+        <div class="tab" onclick="openTab(event,'reportes')">📊 Rep. Asistencia</div>
     </div>
 
     <div class="container">
         <div id="grupos" class="content active">
+            <div class="card">
+                <div class="card-header"><div class="card-title">🏛️ Datos para Formatos Oficiales</div></div>
+                <div class="grid-layout">
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700;">Nombre de la UAC (Materia)</label>
+                        <input type="text" id="configUAC" placeholder="Ej. Pensamiento Matemático I" onchange="saveInstitutionalData()">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700;">Nombre del Orientador(a)</label>
+                        <input type="text" id="configOrientador" placeholder="Ej. Profra. María López" onchange="saveInstitutionalData()">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700;">Subdirector(a) Académico(a)</label>
+                        <input type="text" id="configSubdirector" placeholder="Ej. Profr. Juan Pérez" onchange="saveInstitutionalData()">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700;">Director(a) Escolar</label>
+                        <input type="text" id="configDirector" placeholder="Ej. Dr. Armando Silva" onchange="saveInstitutionalData()">
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header"><div class="card-title">📦 Gestión de Grupos</div></div>
                 <div class="grid-layout">
                     <select id="groupSelect" onchange="syncSelection(this.value)"></select>
                     <button class="danger" onclick="deleteGroup()">🗑️ Eliminar Seleccionado</button>
                 </div>
+                
+                <div id="groupImagesSection" style="display:none; border-top: 1px dashed #e2e8f0; padding-top: 1rem; margin-bottom: 1.5rem;">
+                    <p style="font-size: 0.8rem; font-weight: 700; color: var(--primary);">🖼️ IMÁGENES DEL GRUPO SELECCIONADO:</p>
+                    <div class="grid-layout">
+                        <div>
+                            <label style="font-size: 0.7rem; font-weight: 700;">Banner (Encabezado)</label>
+                            <input type="file" id="groupBannerInput" accept="image/*" onchange="handleGroupImage(this, 'banner')">
+                            <div id="bannerPreview" style="margin-top:5px"></div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; font-weight: 700;">Escudo (Lateral)</label>
+                            <input type="file" id="groupEscudoInput" accept="image/*" onchange="handleGroupImage(this, 'escudo')">
+                            <div id="escudoPreview" style="margin-top:5px"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="border-top: 1px dashed #e2e8f0; padding-top: 1.5rem;" class="grid-layout">
                     <input type="text" id="groupName" placeholder="Ej: 302-B Informática">
                     <button onclick="createGroup()">✨ Crear Nuevo Grupo</button>
@@ -210,16 +325,31 @@
                 </div>
             </div>
             <div class="card">
-                <div class="card-header"><div class="card-title">💾 Respaldo</div></div>
-                <button class="secondary" onclick="fullBackup()">📥 Exportar</button>
-                <button class="secondary" onclick="document.getElementById('restoreFile').click()">📤 Importar</button>
-                <input type="file" id="restoreFile" hidden onchange="restoreBackup(event)">
+                <div class="card-header"><div class="card-title">💾 Respaldo y Mantenimiento</div></div>
+                <div class="grid-layout">
+                    <button class="secondary" onclick="fullBackup()">📥 Exportar Respaldo</button>
+                    <button class="secondary" onclick="document.getElementById('restoreFile').click()">📤 Importar Respaldo</button>
+                    <input type="file" id="restoreFile" hidden onchange="restoreBackup(event)">
+                </div>
+                <div style="border-top: 1px solid #fee2e2; margin-top: 1rem; padding-top: 1rem;">
+                    <button onclick="wipeAllData()" style="background: #dc2626; width: 100%; border-radius: 0.6rem; padding: 0.8rem; color: white; font-weight: 800;">
+                        🔥 BORRAR ABSOLUTAMENTE TODOS LOS DATOS DEL SISTEMA
+                    </button>
+                </div>
             </div>
         </div>
 
         <div id="criterios_tab" class="content">
             <div class="card">
-                <div class="card-header"><div class="card-title">🎯 Criterios de Evaluación</div></div>
+                <div class="card-header">
+                    <div class="card-title">🎯 Criterios de Evaluación 
+                        <select id="p_criterios" class="parcial-selector" style="width:150px; margin-left: 20px;" onchange="renderCriterios()">
+                            <option value="p1">1er Parcial</option>
+                            <option value="p2">2do Parcial</option>
+                            <option value="p3">3er Parcial</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="grid-layout">
                     <select id="groupSelectCriterios" onchange="syncSelection(this.value); renderCriterios();"></select>
                     <input type="text" id="critName" placeholder="Nombre del Rubro">
@@ -236,13 +366,16 @@
         </div>
 
         <div id="pase" class="content">
-            <div class="card">
-                <div class="card-header"><div class="card-title">📝 Registro de Asistencia</div></div>
-                <div class="grid-layout">
-                    <select id="groupSelectAttendance" onchange="syncSelection(this.value)"></select>
-                    <input type="date" id="attendanceDate">
-                    <button onclick="takeAttendance()">🔍 Consultar Lista</button>
-                </div>
+    <div class="card">
+        <div class="card-header"><div class="card-title">📝 Registro de Asistencia</div></div>
+        <div class="grid-layout">
+            <select id="groupSelectAttendance" onchange="syncSelection(this.value)"></select>
+            <input type="date" id="attendanceDate" onchange="updateDateOnly()">
+            <button onclick="takeAttendance()">🔍 Consultar Lista</button>
+            <button class="danger" onclick="deleteAttendanceDay()">🗑️ Eliminar Día</button>
+        </div>
+        
+
                 <div id="quick-actions" style="display:none; margin-bottom: 1rem;">
                      <button class="secondary" style="color: var(--success)" onclick="markAllPresent()">✔️ Marcar asistencia perfecta</button>
                 </div>
@@ -252,7 +385,15 @@
 
         <div id="registro_actividades" class="content">
             <div class="card">
-                <div class="card-header"><div class="card-title">✍️ Alumnos Presentes con Pendientes</div></div>
+                <div class="card-header">
+                    <div class="card-title">✍️ Alumnos Presentes con Pendientes
+                        <select id="p_actividades" class="parcial-selector" style="width:150px; margin-left: 20px;" onchange="renderRegActTable(); loadRubros();">
+                            <option value="p1">1er Parcial</option>
+                            <option value="p2">2do Parcial</option>
+                            <option value="p3">3er Parcial</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="card" style="background:#f8fafc; border:1px solid #e2e8f0; margin-bottom:1rem;">
                     <label style="font-size: 0.75rem; font-weight: 700; color: var(--primary); display: block; margin-bottom: 5px;">ESCALA DEL DOCENTE:</label>
                     <textarea id="teacherScale" placeholder="Escala..." rows="2" style="resize:none" onchange="data.groups[currentGroup].escala = this.value; saveData();"></textarea>
@@ -262,6 +403,7 @@
                     <select id="rubroSelect"></select>
                     <input type="text" id="newActivityName" placeholder="Actividad">
                     <button onclick="addActivity()">🚀 Crear</button>
+<button id="btnToggleTodos" class="secondary" onclick="toggleVerTodos()">👥 Ver Todos los Alumnos</button>
                 </div>
                 <div id="regActTableContainer" class="table-wrapper" style="border:none"></div>
                 <div id="actReportActions" style="display:none; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
@@ -272,7 +414,15 @@
 
         <div id="resumen_evaluacion" class="content">
             <div class="card">
-                <div class="card-header"><div class="card-title">🏆 Resumen de Evaluación</div></div>
+                <div class="card-header">
+                    <div class="card-title">🏆 Resumen de Evaluación
+                        <select id="p_resumen" class="parcial-selector" style="width:150px; margin-left: 20px;" onchange="renderResumenTable()">
+                            <option value="p1">1er Parcial</option>
+                            <option value="p2">2do Parcial</option>
+                            <option value="p3">3er Parcial</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="grid-layout">
                     <select id="groupSelectResumen" onchange="syncSelection(this.value); renderResumenTable();"></select>
                 </div>
@@ -291,6 +441,14 @@
                     <div>
                         <label style="font-size:0.7rem; font-weight:bold;">GRUPO</label>
                         <select id="groupSelectSeg" onchange="syncSelection(this.value); renderSeguimiento();"></select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem; font-weight:bold;">PARCIAL TRABAJOS</label>
+                        <select id="p_seguimiento" onchange="renderSeguimiento()">
+                            <option value="p1">1er Parcial</option>
+                            <option value="p2">2do Parcial</option>
+                            <option value="p3">3er Parcial</option>
+                        </select>
                     </div>
                     <div>
                         <label style="font-size:0.7rem; font-weight:bold;">UAC (MATERIA)</label>
@@ -332,30 +490,171 @@
                 <div id="reportTableArea" class="table-wrapper" style="border:none"></div>
             </div>
         </div>
+
+        <div id="reporte_semestral" class="content">
+            <div class="card">
+                <div class="card-header"><div class="card-title">📅 Reporte Consolidado Semestral (Faltas y Calificaciones)</div></div>
+                <div class="grid-layout">
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700;">Seleccionar Grupo</label>
+                        <select id="groupSelectSemestral" onchange="syncSelection(this.value); renderReporteSemestral();"></select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700;">Horas Totales del Semestre</label>
+                        <input type="number" id="horasSemestre" value="64" placeholder="Ej. 64" onchange="renderReporteSemestral()">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button onclick="exportSemestralPDF()" style="background:#ef4444; width: 100%;">📕 Exportar PDF Semestral</button>
+                    </div>
+                </div>
+                <div id="semestralTableContainer" class="table-wrapper"></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-let data = JSON.parse(localStorage.getItem("attendanceData")) || { groups:{}, logo: "", user: null, pass: null };
+// DATOS E INICIALIZACIÓN
+// Variable para controlar si mostramos a todos los alumnos o solo a los pendientes
 
+let data = JSON.parse(localStorage.getItem("attendanceData")) || { 
+    groups:{}, username: null, docenteName: null, pass: null, 
+    recoveryQ: "", recoveryA: "", orientador: "", subdirector: "", uac: "", director: ""
+};
+function renderStudentList() {
+    if (!currentGroup) return;
+    const container = document.getElementById('studentListContainer');
+    if (!container) {
+        // Si no existe el contenedor, lo creamos debajo del formulario de alumnos
+        const div = document.createElement('div');
+        div.id = 'studentListContainer';
+        div.className = 'table-wrapper';
+        document.querySelector('#grupos .card:nth-child(3)').appendChild(div);
+    }
+    
+    let students = data.groups[currentGroup].students;
+    let html = `<table>
+        <thead>
+            <tr><th>No.</th><th>Nombre del Alumno</th><th>Acción</th></tr>
+        </thead>
+        <tbody>`;
+    
+    students.forEach((s, idx) => {
+        html += `<tr>
+            <td>${s.num}</td>
+            <td>${s.name}</td>
+            <td><button class="danger" style="padding: 2px 8px; font-size: 11px;" onclick="deleteStudent(${idx})">🗑️ Borrar</button></td>
+        </tr>`;
+    });
+    
+    html += `</tbody></table>`;
+    document.getElementById('studentListContainer').innerHTML = html;
+}
+function saveAttendance() {
+    const date = document.getElementById("attendanceDate").value;
+    const parcial = document.getElementById("p_asistencia_registro").value; // <--- Nuevo
+    if (!date || !currentGroup) return;
+
+    if (!data.groups[currentGroup].attendance) data.groups[currentGroup].attendance = {};
+    
+    // Guardamos un objeto que contiene el parcial y los registros de los alumnos
+    data.groups[currentGroup].attendance[date] = {
+        parcial: parcial,
+        records: {}
+    };
+
+    const rows = document.querySelectorAll("#attendanceTableBody tr");
+    rows.forEach(row => {
+        const num = row.cells[0].textContent;
+        const isPresent = row.querySelector("input[type='checkbox']").checked;
+        data.groups[currentGroup].attendance[date].records[num] = { present: isPresent };
+    });
+
+    saveData();
+    alert("Asistencia guardada correctamente en el " + parcial.toUpperCase());
+}
+function deleteStudent(index) {
+    const studentName = data.groups[currentGroup].students[index].name;
+    if (confirm(`¿Estás seguro de eliminar a ${studentName}? Esto no afectará los datos de otros alumnos.`)) {
+        // Elimina solo el elemento en esa posición
+        data.groups[currentGroup].students.splice(index, 1);
+        saveData(); // Guarda en localStorage
+        renderStudentList(); // Actualiza la tabla visualmente
+        alert("Estudiante eliminado con éxito.");
+    }
+}
 function handleRegister() {
+    const user = document.getElementById('regUserInput').value.trim();
     const name = document.getElementById('regNameInput').value.trim();
     const pass = document.getElementById('regPassInput').value.trim();
-    if(!name || !pass) return alert("Por favor complete todos los campos");
-    data.user = name; data.pass = pass; saveData();
+    const q = document.getElementById('regQuestion').value.trim();
+    const a = document.getElementById('regAnswer').value.trim().toUpperCase();
+    
+    if(!user || !name || !pass || !q || !a) return alert("Por favor complete todos los campos, incluyendo la pregunta de recuperación.");
+    
+    data.username = user; 
+    data.docenteName = name; 
+    data.pass = pass; 
+    data.recoveryQ = q;
+    data.recoveryA = a;
+    saveData();
+    
     sessionStorage.setItem("isLoggedIn", "true");
-    sessionStorage.setItem("docenteName", name.toUpperCase());
+    sessionStorage.setItem("sessionDocenteName", name.toUpperCase());
     showApp();
 }
 
 function handleLogin() {
     const user = document.getElementById('userInput').value.trim();
     const pass = document.getElementById('passInput').value.trim();
-    if(user === data.user && pass === data.pass) {
+    
+    if(user === data.username && pass === data.pass) {
         sessionStorage.setItem("isLoggedIn", "true");
-        sessionStorage.setItem("docenteName", user.toUpperCase());
+        sessionStorage.setItem("sessionDocenteName", data.docenteName.toUpperCase());
         showApp();
     } else { document.getElementById('authError').style.display = "block"; }
+}
+let mostrarTodosActividades = false;
+function toggleVerTodos() {
+  
+    mostrarTodosActividades = !mostrarTodosActividades;
+    renderRegActTable(); // Esto vuelve a dibujar la tabla con el nuevo filtro
+    
+    const btn = document.getElementById("btnToggleTodos");
+    if(btn) {
+        // Cambiamos el texto para que el usuario sepa qué pasará al picar
+        btn.innerText = mostrarTodosActividades ? "👥 Ver solo Pendientes" : "👥 Ver Todos los Alumnos";
+    }
+}
+// LOGICA DE RECUPERACIÓN
+function showRecovery() {
+    document.getElementById('login-section').style.display = "none";
+    document.getElementById('recovery-section').style.display = "block";
+    document.getElementById('displayQuestion').textContent = "Pregunta: " + data.recoveryQ;
+    document.getElementById('recoveryResult').style.display = "none";
+    document.getElementById('recoveryAnswerInput').value = "";
+}
+
+function backToLogin() {
+    document.getElementById('recovery-section').style.display = "none";
+    document.getElementById('login-section').style.display = "block";
+}
+
+function handleRecovery() {
+    const answer = document.getElementById('recoveryAnswerInput').value.trim().toUpperCase();
+    const resDiv = document.getElementById('recoveryResult');
+    
+    if(answer === data.recoveryA) {
+        resDiv.style.display = "block";
+        resDiv.innerHTML = `
+            <p>✅ <b>Datos recuperados:</b></p>
+            <p><b>Usuario:</b> ${data.username}</p>
+            <p><b>Contraseña:</b> ${data.pass}</p>
+            <p><b>Nombre:</b> ${data.docenteName}</p>
+        `;
+    } else {
+        alert("Respuesta incorrecta.");
+    }
 }
 
 function handleLogout() { sessionStorage.clear(); location.reload(); }
@@ -363,8 +662,38 @@ function handleLogout() { sessionStorage.clear(); location.reload(); }
 function showApp() {
     document.getElementById('auth-overlay').style.display = "none";
     document.getElementById('main-app').style.display = "block";
-    document.getElementById('display-docente').textContent = "DOCENTE: " + sessionStorage.getItem("docenteName");
-    renderLogo(); updateDateOnly();
+    document.getElementById('display-docente').textContent = "DOCENTE: " + sessionStorage.getItem("sessionDocenteName");
+    
+    document.getElementById('configUAC').value = data.uac || "";
+    document.getElementById('configOrientador').value = data.orientador || "";
+    document.getElementById('configSubdirector').value = data.subdirector || "";
+    document.getElementById('configDirector').value = data.director || "";
+            
+    // --- SOLUCIÓN DEFINITIVA PARA LA FECHA ---
+    const ahora = new Date();
+    const yyyy = ahora.getFullYear();
+    const mm = String(ahora.getMonth() + 1).padStart(2, '0');
+    const dd = String(ahora.getDate()).padStart(2, '0');
+    
+    const fechaHoy = `${yyyy}-${mm}-${dd}`;
+    
+    const inputFecha = document.getElementById('attendanceDate');
+    if (inputFecha) {
+        inputFecha.value = fechaHoy;
+        console.log("Fecha establecida en el sistema:", fechaHoy);
+}
+    
+    updateDateOnly(); 
+}
+
+// Mismas funciones de lógica que tenías antes
+function saveInstitutionalData() {
+    data.uac = document.getElementById('configUAC').value.toUpperCase();
+    data.orientador = document.getElementById('configOrientador').value.toUpperCase();
+    data.subdirector = document.getElementById('configSubdirector').value.toUpperCase();
+    data.director = document.getElementById('configDirector').value.toUpperCase();
+    if(document.getElementById('uacNombre')) document.getElementById('uacNombre').value = data.uac;
+    saveData();
 }
 
 let currentGroup = "";
@@ -373,17 +702,6 @@ function updateDateOnly() {
     document.getElementById('live-date').textContent = now.toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'}).toUpperCase();
 }
 function saveData(){ localStorage.setItem("attendanceData", JSON.stringify(data)); }
-
-function uploadLogo(event) {
-    const reader = new FileReader();
-    reader.onload = (e) => { data.logo = e.target.result; saveData(); renderLogo(); };
-    reader.readAsDataURL(event.target.files[0]);
-}
-function renderLogo() {
-    const img = document.getElementById("logo-img");
-    const placeholder = document.getElementById("logo-placeholder");
-    if(data.logo) { img.src = data.logo; img.style.display = "block"; placeholder.style.display = "none"; }
-}
 
 function openTab(evt, tabId){
     document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
@@ -395,10 +713,11 @@ function openTab(evt, tabId){
     if(tabId === 'resumen_evaluacion') renderResumenTable();
     if(tabId === 'criterios_tab') renderCriterios();
     if(tabId === 'seguimiento_tab') renderSeguimiento();
+    if(tabId === 'reporte_semestral') renderReporteSemestral();
 }
 
 function loadSelectors(){
-    const selectors = ["groupSelect", "groupSelectAttendance", "groupSelectReport", "groupSelectRegAct", "groupSelectResumen", "groupSelectCriterios", "groupSelectSeg"];
+    const selectors = ["groupSelect", "groupSelectAttendance", "groupSelectReport", "groupSelectRegAct", "groupSelectResumen", "groupSelectCriterios", "groupSelectSeg", "groupSelectSemestral"];
     selectors.forEach(id => {
         let sel = document.getElementById(id); if(!sel) return;
         sel.innerHTML = '<option value="">-- Grupo --</option>';
@@ -410,9 +729,10 @@ function loadSelectors(){
 
 function loadRubros() {
     let sel = document.getElementById("rubroSelect"); if(!sel) return;
+    let parcial = document.getElementById("p_actividades").value;
     sel.innerHTML = ''; 
-    if(currentGroup && data.groups[currentGroup].criterios) {
-        let rubrosActividad = data.groups[currentGroup].criterios.filter(c => c.isAct);
+    if(currentGroup && data.groups[currentGroup].criterios && data.groups[currentGroup].criterios[parcial]) {
+        let rubrosActividad = data.groups[currentGroup].criterios[parcial].filter(c => c.isAct);
         if (rubrosActividad.length === 0) { sel.innerHTML = '<option value="">-- Sin Rubros de Actividad --</option>'; return; }
         rubrosActividad.forEach((c, idx) => {
             let o = document.createElement("option"); o.value = c.name; o.text = c.name; 
@@ -422,52 +742,88 @@ function loadRubros() {
 }
 
 function syncSelection(val) { 
-    currentGroup = val; loadSelectors(); 
-    if(currentGroup && data.groups[currentGroup].escala){ document.getElementById('teacherScale').value = data.groups[currentGroup].escala; }
-    else if(currentGroup) { document.getElementById('teacherScale').value = ""; }
+    currentGroup = val; 
+    loadSelectors(); 
+    const imgSection = document.getElementById('groupImagesSection');
+    
+    if(currentGroup){
+renderStudentList(); // Añadir esta línea
+        imgSection.style.display = "block";
+        if(data.groups[currentGroup].escala){ document.getElementById('teacherScale').value = data.groups[currentGroup].escala; }
+        else { document.getElementById('teacherScale').value = ""; }
+        
+        const bannerPre = document.getElementById('bannerPreview');
+        const escudoPre = document.getElementById('escudoPreview');
+        bannerPre.innerHTML = data.groups[currentGroup].banner ? `<img src="${data.groups[currentGroup].banner}" class="group-img-preview">` : '<small>Sin banner</small>';
+        escudoPre.innerHTML = data.groups[currentGroup].escudo ? `<img src="${data.groups[currentGroup].escudo}" class="group-img-preview">` : '<small>Sin escudo</small>';
+    } else {
+        imgSection.style.display = "none";
+    }
+}
+
+function handleGroupImage(input, type) {
+    if(!currentGroup) return;
+    const file = input.files[0];
+    if(!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const base64 = e.target.result;
+        if(type === 'banner') {
+            data.groups[currentGroup].banner = base64;
+            document.getElementById('bannerPreview').innerHTML = `<img src="${base64}" class="group-img-preview">`;
+        } else {
+            data.groups[currentGroup].escudo = base64;
+            document.getElementById('escudoPreview').innerHTML = `<img src="${base64}" class="group-img-preview">`;
+        }
+        saveData();
+    };
+    reader.readAsDataURL(file);
 }
 
 function createGroup(){
     let name = document.getElementById("groupName").value.trim().toUpperCase();
     if(!name) return alert("Ingrese un nombre para el grupo");
     if(data.groups[name]) return alert("Este grupo ya existe");
-    
     data.groups[name] = { 
         students:[], 
         attendance:{}, 
-        activities: [], 
-        criterios: [], 
-        manualGrades: {}, 
-        extraPoints: {}, 
-        escala: "" 
+        activities: { p1:[], p2:[], p3:[] }, 
+        criterios: { p1:[], p2:[], p3:[] }, 
+        manualGrades: { p1:{}, p2:{}, p3:{} }, 
+        extraPoints: { p1:{}, p2:{}, p3:{} }, 
+        escala: "",
+        banner: null,
+        escudo: null 
     };
-    
-    saveData(); 
-    currentGroup = name; 
-    loadSelectors();
-    
-    if(document.getElementById("attendanceTableContainer")) {
-        document.getElementById("attendanceTableContainer").innerHTML = "";
-    }
-    document.getElementById("groupName").value = ""; 
-    alert("Grupo " + name + " creado. Recuerde agregar alumnos en esta misma pestaña.");
+    saveData(); currentGroup = name; loadSelectors();
+    syncSelection(name);
+    alert("Grupo " + name + " creado. Puede subir las imágenes ahora.");
 }
 
 function deleteGroup(){
-    if(currentGroup && confirm(`Eliminar ${currentGroup}?`)){ delete data.groups[currentGroup]; currentGroup = ""; saveData(); loadSelectors(); }
+    if(currentGroup && confirm(`Eliminar ${currentGroup}?`)){ delete data.groups[currentGroup]; currentGroup = ""; saveData(); loadSelectors(); syncSelection(""); }
 }
+
+// ... (resto del código anterior se mantiene igual)
 
 function addStudent(){
     if(!currentGroup) return alert("Seleccione un grupo primero");
     let num = document.getElementById("studentNumber").value.trim();
     let name = document.getElementById("studentName").value.trim().toUpperCase();
     if(!num || !name) return alert("Complete datos del alumno");
+    
     data.groups[currentGroup].students.push({ num, name });
-    data.groups[currentGroup].students.sort((a,b) => a.num - b.num);
+    
+    // Cambio: Ordenamiento alfabético por nombre en lugar de número
+    data.groups[currentGroup].students.sort((a, b) => a.name.localeCompare(b.name));
+    
     saveData();
-    alert("Alumno agregado");
     document.getElementById("studentNumber").value = "";
     document.getElementById("studentName").value = "";
+
+// Añadir esta línea al final de la función addStudent()
+renderStudentList();
 }
 
 function importExcel(event){
@@ -477,36 +833,53 @@ function importExcel(event){
         let wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
         let rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
         rows.forEach(r => {
-            let n = r.No || r.Numero; let nom = r.Nombre;
-            if(n && nom) data.groups[currentGroup].students.push({ num: n.toString(), name: nom.toString().toUpperCase() });
+            let n = r.No || r.Numero;
+            let nom = r.Nombre;
+            if(n && nom) {
+                data.groups[currentGroup].students.push({ 
+                    num: n.toString(), 
+                    name: nom.toString().toUpperCase() 
+                });
+            }
         });
-        saveData(); alert("Importación exitosa");
+        
+        // Cambio: Asegurar orden alfabético tras la importación masiva
+        data.groups[currentGroup].students.sort((a, b) => a.name.localeCompare(b.name));
+        
+        saveData();
+        alert("Importación exitosa");
     };
     reader.readAsArrayBuffer(event.target.files[0]);
 }
 
+// ... (el resto del código se mantiene exactamente igual)
 function addCriterio() {
     if(!currentGroup) return;
+    let parcial = document.getElementById("p_criterios").value;
     let name = document.getElementById("critName").value.trim().toUpperCase();
     let pct = parseFloat(document.getElementById("critPct").value) || 0;
     let isAct = document.getElementById("critIsAct").checked;
     if(!name) return;
-    if(!data.groups[currentGroup].criterios) data.groups[currentGroup].criterios = [];
-    data.groups[currentGroup].criterios.push({ name, pct, isAct });
+    if(!data.groups[currentGroup].criterios || Array.isArray(data.groups[currentGroup].criterios)) data.groups[currentGroup].criterios = { p1:[], p2:[], p3:[] };
+    data.groups[currentGroup].criterios[parcial].push({ name, pct, isAct });
     saveData(); renderCriterios(); loadRubros();
 }
 
-function deleteCriterio(idx) { data.groups[currentGroup].criterios.splice(idx, 1); saveData(); renderCriterios(); loadRubros(); }
+function deleteCriterio(idx) { 
+    let parcial = document.getElementById("p_criterios").value;
+    data.groups[currentGroup].criterios[parcial].splice(idx, 1); saveData(); renderCriterios(); loadRubros(); 
+}
 
 function renderCriterios() {
     if(!currentGroup) return;
-    let group = data.groups[currentGroup];
+    let parcial = document.getElementById("p_criterios").value;
+    if(!data.groups[currentGroup].criterios || Array.isArray(data.groups[currentGroup].criterios)) data.groups[currentGroup].criterios = { p1:[], p2:[], p3:[] };
+    let list = data.groups[currentGroup].criterios[parcial] || [];
     let html = `<table><thead><tr><th>Rubro</th><th>Pct %</th><th>Tipo</th><th>Acción</th></tr></thead><tbody>`;
     let total = 0;
-    (group.criterios || []).forEach((c, idx) => {
+    list.forEach((c, idx) => {
         total += c.pct;
-        html += `<tr><td>${c.name}</td><td>${c.pct}%</td><td>${c.isAct?'ACTIVIDAD':'MANUAL'}</td>
-        <td><button class="danger" onclick="deleteCriterio(${idx})">Eliminar</button></td></tr>`;
+        html += `<tr><td>${c.name}</td><td>${c.pct}%</td><td>${c.isAct?'ACTIVIDAD':'MANUAL'}</td><td><button class="danger" onclick="deleteCriterio(${idx})">Eliminar</button></td></tr>`;
     });
     document.getElementById("criteriosTableContainer").innerHTML = html + `</tbody></table>`;
     document.getElementById("totalCritPct").textContent = total + "%";
@@ -514,21 +887,33 @@ function renderCriterios() {
 
 function takeAttendance(){
     let date = document.getElementById("attendanceDate").value;
-    if(!currentGroup) return alert("Seleccione un grupo");
-    if(!date) return alert("Seleccione una fecha");
-    
+    if(!currentGroup || !date) return alert("Seleccione grupo y fecha");
     let group = data.groups[currentGroup];
-    if(!group.students || group.students.length === 0) {
-        document.getElementById("attendanceTableContainer").innerHTML = `<div style="padding:20px; color:red; text-align:center;">No hay alumnos registrados en este grupo.</div>`;
-        document.getElementById("quick-actions").style.display = "none";
-        return;
-    }
-
     if(!group.attendance[date]) group.attendance[date] = {};
     document.getElementById("quick-actions").style.display = "block";
     renderAttendanceTable(date);
 }
+function deleteAttendanceDay() {
+    const date = document.getElementById("attendanceDate").value;
+    if (!currentGroup) return alert("Seleccione un grupo primero");
+    if (!date) return alert("Seleccione la fecha que desea eliminar");
 
+    if (confirm(`¿Está seguro de que desea eliminar TODO el registro de asistencia del día ${date}? Esta acción no se puede deshacer.`)) {
+        if (data.groups[currentGroup].attendance && data.groups[currentGroup].attendance[date]) {
+            // Elimina la propiedad de la fecha específica
+            delete data.groups[currentGroup].attendance[date];
+            saveData();
+            
+            // Limpia la tabla visualmente
+            document.getElementById("attendanceTableContainer").innerHTML = "";
+            document.getElementById("quick-actions").style.display = "none";
+            
+            alert("Registro del día " + date + " eliminado correctamente.");
+        } else {
+            alert("No existe ningún registro de asistencia para la fecha seleccionada.");
+        }
+    }
+}
 function renderAttendanceTable(date){
     let group = data.groups[currentGroup];
     let html = `<table><thead><tr><th>No.</th><th>Alumno</th><th>Asistencia</th><th>Causa</th></tr></thead><tbody>`;
@@ -559,203 +944,302 @@ function markAllPresent() {
 function addActivity() {
     let name = document.getElementById("newActivityName").value.trim();
     let rubro = document.getElementById("rubroSelect").value;
+    let parcial = document.getElementById("p_actividades").value;
     if(!name || !rubro) return;
-    data.groups[currentGroup].activities.push({ name, rubro, grades: {} });
+    if(!data.groups[currentGroup].activities || Array.isArray(data.groups[currentGroup].activities)) data.groups[currentGroup].activities = { p1:[], p2:[], p3:[] };
+    data.groups[currentGroup].activities[parcial].push({ name, rubro, grades: {} });
     saveData(); renderRegActTable();
 }
 
 function renderRegActTable() {
     if(!currentGroup) return;
+    let parcial = document.getElementById("p_actividades").value;
     let group = data.groups[currentGroup];
-    let selectedDate = document.getElementById("attendanceDate").value;
+    
+    // Si no hay fecha seleccionada en el pase de lista, usamos la de hoy para el filtro
+    let selectedDate = document.getElementById("attendanceDate").value || new Date().toISOString().split('T')[0];
     let attendanceForDate = group.attendance[selectedDate] || {};
     
+    if(!group.activities || Array.isArray(group.activities)) group.activities = { p1:[], p2:[], p3:[] };
+    let acts = group.activities[parcial] || [];
+
     if ($.fn.DataTable.isDataTable('#regActTable')) $('#regActTable').DataTable().destroy();
     document.getElementById("actReportActions").style.display = "flex";
     
     let html = `<table id="regActTable" class="display cell-border" style="width:100%"><thead><tr><th>No.</th><th>Alumno</th>`;
-    group.activities.forEach((act, idx) => {
+    acts.forEach((act, idx) => {
         html += `<th style="text-align:center">${act.name}<br><small>${act.rubro}</small><br><button onclick="deleteActivity(${idx})" style="background:red; color:white; border:none; font-size:8px; cursor:pointer">X</button></th>`;
     });
     html += `<th>Act. Pendientes</th></tr></thead><tbody>`;
     
-    // FILTRO ACTUALIZADO: Solo alumnos presentes Y que tengan al menos un pendiente ("" o "L")
+    // --- LÓGICA DE FILTRADO CORREGIDA ---
     let listaFiltrada = group.students.filter(s => {
-        let estaPresente = attendanceForDate[s.num] && attendanceForDate[s.num].present;
-        if(!estaPresente) return false;
+        // Si el botón de "Ver Todos" está activado, mostramos a todos sin excepción
+        if (mostrarTodosActividades) return true;
 
-        // Verificar si tiene al menos una actividad incompleta
-        let tienePendientes = group.activities.some(act => {
+        // Si es "Ver solo pendientes", filtramos:
+        // 1. Que el alumno esté marcado como presente hoy (o en la fecha seleccionada)
+        let estaPresente = attendanceForDate[s.num] && attendanceForDate[s.num].present;
+        
+        // 2. Que tenga al menos una actividad vacía o con "L" (Libreta)
+        let tienePendientes = acts.some(act => {
             let val = (act.grades[s.num] || "").trim().toUpperCase();
             return val === "" || val === "L";
         });
 
-        return tienePendientes; 
+        return estaPresente && tienePendientes;
     });
 
     listaFiltrada.forEach(s => {
         let cells = ""; let pendingCount = 0;
-        group.activities.forEach((act, aIdx) => {
+        acts.forEach((act, aIdx) => {
             let val = (act.grades[s.num] || "").trim().toUpperCase();
-            let statusClass = "";
-            if(val === "L") { statusClass = "status-libreta"; pendingCount++; } 
-            else if(val === "") { statusClass = "status-vacio"; pendingCount++; }
-
-            cells += `<td class="${statusClass}"><input type="text" class="grade-input ${statusClass}" value="${val}" onchange="updateGrade(${aIdx},'${s.num}',this.value)"></td>`;
+            let statusClass = (val === "L") ? "status-libreta" : (val === "" ? "status-vacio" : "");
+            if(val === "L" || val === "") pendingCount++;
+            
+            // Aquí añadimos la clase para el salto de Enter que pediste antes
+            cells += `<td class="${statusClass}">
+                <input type="text" class="grade-input grade-input-act ${statusClass}" 
+                value="${val}" onchange="updateGrade(${aIdx},'${s.num}',this.value)"
+                onkeydown="moveCursorNext(event, this)">
+            </td>`;
         });
         html += `<tr><td>${s.num}</td><td><b>${s.name}</b></td>${cells}<td style="text-align:center"><span class="badge-pending">${pendingCount}</span></td></tr>`;
     });
+    
     document.getElementById("regActTableContainer").innerHTML = html + "</tbody></table>";
     setTimeout(() => { $('#regActTable').DataTable({ paging: false, scrollX: true }); }, 10);
 }
-
 function updateGrade(aIdx, sNum, val) { 
-    data.groups[currentGroup].activities[aIdx].grades[sNum] = val.trim().toUpperCase(); 
+    let parcial = document.getElementById("p_actividades").value;
+    data.groups[currentGroup].activities[parcial][aIdx].grades[sNum] = val.trim().toUpperCase(); 
     saveData(); renderRegActTable(); 
 }
 
-function deleteActivity(idx) { if(confirm("¿Eliminar?")) { data.groups[currentGroup].activities.splice(idx,1); saveData(); renderRegActTable(); } }
+function deleteActivity(idx) { 
+    let parcial = document.getElementById("p_actividades").value;
+    if(confirm("¿Eliminar?")) { data.groups[currentGroup].activities[parcial].splice(idx,1); saveData(); renderRegActTable(); } 
+}
+
+function addPdfHeaders(doc, currentGroup) {
+    const groupData = data.groups[currentGroup];
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let currentY = 10;
+    let bannerHeight = 0;
+
+    if (groupData && groupData.banner) {
+        bannerHeight = 25;
+        doc.addImage(groupData.banner, 'PNG', 10, currentY, pageWidth - 20, bannerHeight);
+        currentY += bannerHeight + 5;
+    }
+
+    if (groupData && groupData.escudo) {
+        doc.addImage(groupData.escudo, 'PNG', 10, currentY, 20, 20);
+        return { startY: currentY, textX: 35, endY: currentY + 25 };
+    }
+
+    return { startY: currentY, textX: 14, endY: currentY + 10 };
+}
+
+function addCuatroFirmas(doc, yPos) {
+    const docente = data.docenteName || "_________________________";
+    const orientador = data.orientador || "_________________________";
+    const subdirector = data.subdirector || "_________________________";
+    const director = data.director || "_________________________";
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFontSize(8); doc.setFont("helvetica", "bold");
+    
+    doc.line(20, yPos, 90, yPos);
+    doc.text(docente, 55, yPos + 5, {align:"center"});
+    doc.text("Docente", 55, yPos + 9, {align:"center"});
+
+    doc.line(pageWidth - 90, yPos, pageWidth - 20, yPos);
+    doc.text(orientador, pageWidth - 55, yPos + 5, {align:"center"});
+    doc.text("Orientador(a)", pageWidth - 55, yPos + 9, {align:"center"});
+
+    let yPos2 = yPos + 25;
+    doc.line(20, yPos2, 90, yPos2);
+    doc.text(subdirector, 55, yPos2 + 5, {align:"center"});
+    doc.text("Subdirector(a) Académico(a)", 55, yPos2 + 9, {align:"center"});
+
+    doc.line(pageWidth - 90, yPos2, pageWidth - 20, yPos2);
+    doc.text(director, pageWidth - 55, yPos2 + 5, {align:"center"});
+    doc.text("Director(a) Escolar", pageWidth - 55, yPos2 + 9, {align:"center"});
+}
 
 function exportActividadesPDF() {
     const { jsPDF } = window.jspdf;
     let doc = new jsPDF('l', 'mm', 'a4'); 
     let group = data.groups[currentGroup];
-    let docente = sessionStorage.getItem("docenteName") || "DOCENTE";
-    let escala = document.getElementById('teacherScale').value || "N/A";
+    let parcial = document.getElementById("p_actividades").value;
+    let escalaDocente = group.escala || "No definida";
 
-    doc.setFontSize(14);
-    doc.text(`REGISTRO COMPLETO DE ACTIVIDADES - GRUPO: ${currentGroup}`, 14, 15);
+    let headerInfo = addPdfHeaders(doc, currentGroup);
+    let ty = headerInfo.endY;
+
+    doc.setFontSize(14); doc.setFont("helvetica", "bold");
+    doc.text(`REGISTRO DE ACTIVIDADES (${parcial.toUpperCase()}) - GRUPO: ${currentGroup}`, headerInfo.textX, ty);
+    
+    doc.setFontSize(8);
+    doc.setFillColor(233, 213, 255); doc.rect(headerInfo.textX, ty + 4, 3, 3, 'F');
+    doc.text("L: No llevó libreta (Lila)", headerInfo.textX + 5, ty + 6.5);
+    
+    doc.setFillColor(254, 226, 226); doc.rect(headerInfo.textX + 50, ty + 4, 3, 3, 'F');
+    doc.text("Vacío: Pendiente de entregar (Rojo)", headerInfo.textX + 55, ty + 6.5);
+
     doc.setFontSize(10);
-    doc.text(`Docente: ${docente}`, 14, 22);
-    doc.text(`Escala: ${escala}`, 14, 28);
+    doc.text("ESCALA DEL DOCENTE:", headerInfo.textX, ty + 15);
+    doc.setFont("helvetica", "normal"); 
+    doc.text(escalaDocente, headerInfo.textX, ty + 20, { maxWidth: 240 });
 
     let headers = [['No.', 'Nombre del Alumno']];
-    group.activities.forEach(act => headers[0].push(`${act.name}\n(${act.rubro})`));
-
+    (group.activities[parcial] || []).forEach(act => headers[0].push(`${act.name}\n(${act.rubro})`));
     let bodyRows = group.students.map(s => {
         let row = [s.num, s.name];
-        group.activities.forEach(act => row.push(act.grades[s.num] || ""));
+        (group.activities[parcial] || []).forEach(act => row.push(act.grades[s.num] || ""));
         return row;
     });
 
     doc.autoTable({
-        startY: 35,
-        head: headers,
-        body: bodyRows,
-        theme: 'grid',
+        startY: ty + 30, head: headers, body: bodyRows, theme: 'grid',
         styles: { fontSize: 7, halign: 'center', cellPadding: 1 },
         headStyles: { fillColor: [79, 70, 229], textColor: 255 },
         columnStyles: { 1: { halign: 'left', cellWidth: 50 } },
-        didDrawCell: (data) => {
+        didParseCell: function(data) {
             if (data.section === 'body' && data.column.index > 1) {
-                let cellValue = data.cell.raw ? data.cell.raw.toString().toUpperCase() : "";
-                if (cellValue === 'L') {
-                    doc.setFillColor(233, 213, 255); 
-                    doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
-                    doc.setTextColor(0, 0, 0);
-                    doc.text('L', data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1, { align: 'center' });
-                } else if (cellValue === '') {
-                    doc.setFillColor(254, 226, 226); 
-                    doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
-                }
+                let val = (data.cell.raw || "").toString().trim().toUpperCase();
+                if (val === "L") data.cell.styles.fillColor = [233, 213, 255];
+                else if (val === "") data.cell.styles.fillColor = [254, 226, 226];
             }
         }
     });
 
     let finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text("NOTA PARA EL PADRE DE FAMILIA O TUTOR:", 14, finalY);
-    doc.setFont("helvetica", "normal");
-    
-    doc.setFillColor(233, 213, 255);
-    doc.rect(14, finalY + 4, 4, 4, 'F');
-    doc.text("Lila (L): El estudiante no presentó la libreta a clase.", 20, finalY + 7);
-    
-    doc.setFillColor(254, 226, 226);
-    doc.rect(14, finalY + 10, 4, 4, 'F');
-    doc.text("Rojo Claro (Vacío): El estudiante no entregó la actividad solicitada.", 20, finalY + 13);
+    if(finalY > 150) { doc.addPage(); finalY = 20; }
+    addCuatroFirmas(doc, finalY + 15);
+    doc.save(`Actividades_${parcial}_${currentGroup}.pdf`);
+}
 
-    doc.save(`Reporte_Actividades_Completo_${currentGroup}.pdf`);
+function calculateFinalGrade(sNum, parcial) {
+    let group = data.groups[currentGroup];
+    if(!group || !group.criterios) return 0;
+    let criterios = group.criterios[parcial] || [];
+    let acts = group.activities[parcial] || [];
+    let final = 0;
+
+    criterios.forEach(c => {
+        let valor = 0;
+        if(c.isAct) {
+            let suma = 0, actsDelRubro = acts.filter(a => a.rubro === c.name);
+            actsDelRubro.forEach(act => {
+                let v = (act.grades[sNum] || "").trim().toUpperCase();
+                suma += (v === "" || v === "L") ? 0 : (parseFloat(v) || 0);
+            });
+            valor = actsDelRubro.length > 0 ? (suma / actsDelRubro.length) : 0;
+        } else {
+            valor = parseFloat(group.manualGrades?.[parcial]?.[c.name]?.[sNum]) || 0;
+        }
+        final += (valor * (c.pct / 100));
+    });
+
+    let extra = parseFloat(group.extraPoints?.[parcial]?.[sNum]) || 0;
+    let finalConExtra = Math.min(final + extra, 10);
+    return finalConExtra < 6.0 ? 5 : Math.round(finalConExtra);
 }
 
 function renderResumenTable() {
     if(!currentGroup) return;
+    let parcial = document.getElementById("p_resumen").value;
     document.getElementById("gradeExportActions").style.display = "flex";
     let group = data.groups[currentGroup];
-    let criterios = group.criterios || [];
+    if(!group.criterios || Array.isArray(group.criterios)) group.criterios = { p1:[], p2:[], p3:[] };
+    if(!group.activities || Array.isArray(group.activities)) group.activities = { p1:[], p2:[], p3:[] };
+    if(!group.manualGrades || Array.isArray(group.manualGrades)) group.manualGrades = { p1:{}, p2:{}, p3:{} };
+    if(!group.extraPoints || Array.isArray(group.extraPoints)) group.extraPoints = { p1:{}, p2:{}, p3:{} };
+
+    let criterios = group.criterios[parcial] || [];
+    let acts = group.activities[parcial] || [];
     if ($.fn.DataTable.isDataTable('#resumenTable')) $('#resumenTable').DataTable().destroy();
 
     let html = `<table id="resumenTable" class="display cell-border" style="width:100%"><thead><tr><th>No.</th><th>Alumno</th>`;
     criterios.forEach(c => { html += `<th style="background:#f8fafc; font-weight:700; text-align:center">${c.name} (${c.pct}%)</th>`; });
-    html += `<th style="background:#f59e0b; color:white; text-align:center">PUNTOS EXTRA</th>`;
-    html += `<th style="background:#4f46e5; color:white; text-align:center">PROMEDIO</th>`;
-    html += `<th style="background:#10b981; color:white; text-align:center">CALIF. FINAL</th></tr></thead><tbody>`;
+    html += `<th style="background:#f59e0b; color:white; text-align:center">PUNTOS EXTRA</th><th style="background:#4f46e5; color:white; text-align:center">PROMEDIO</th><th style="background:#10b981; color:white; text-align:center">CALIF. FINAL</th><th style="background:#dc2626; color:white; text-align:center">RIESGO</th></tr></thead><tbody>`;
 
     group.students.forEach(s => {
         let final = 0; let critCells = "";
         criterios.forEach(c => {
             let valor = 0;
             if(c.isAct) {
-                let suma = 0;
-                let actsDelRubro = group.activities.filter(a => a.rubro === c.name);
+                let suma = 0, actsDelRubro = acts.filter(a => a.rubro === c.name);
                 actsDelRubro.forEach(act => {
                     let v = (act.grades[s.num] || "").trim().toUpperCase();
-                    let n = (v === "" || v === "L") ? 0 : (parseFloat(v) || 0);
-                    suma += n;
+                    suma += (v === "" || v === "L") ? 0 : (parseFloat(v) || 0);
                 });
                 valor = actsDelRubro.length > 0 ? (suma / actsDelRubro.length) : 0;
                 critCells += `<td style="text-align:center; font-weight:700">${valor.toFixed(1)}</td>`;
             } else {
-                if(!group.manualGrades) group.manualGrades = {};
-                if(!group.manualGrades[c.name]) group.manualGrades[c.name] = {};
-                valor = parseFloat(group.manualGrades[c.name][s.num]) || 0;
+                if(!group.manualGrades[parcial][c.name]) group.manualGrades[parcial][c.name] = {};
+                valor = parseFloat(group.manualGrades[parcial][c.name][s.num]) || 0;
                 critCells += `<td><input type="number" class="grade-input manual-input" value="${valor}" onchange="updateManualGrade('${c.name}','${s.num}',this.value)"></td>`;
             }
             final += (valor * (c.pct / 100));
         });
 
-        if(!group.extraPoints) group.extraPoints = {};
-        let extra = parseFloat(group.extraPoints[s.num]) || 0;
+        let extra = parseFloat(group.extraPoints[parcial][s.num]) || 0;
         let finalConExtra = Math.min(final + extra, 10);
         let califFinal = finalConExtra < 6.0 ? 5 : Math.round(finalConExtra);
 
-        html += `<tr><td>${s.num}</td><td><b>${s.name}</b></td>${critCells}
-            <td><input type="number" class="grade-input extra-input" value="${extra}" onchange="updateExtraPoints('${s.num}',this.value)"></td>
-            <td style="text-align:center; font-weight:800;">${finalConExtra.toFixed(1)}</td>
-            <td class="${califFinal<6?'reprobado-cell':''}" style="text-align:center; font-weight:900;">${califFinal}</td></tr>`;
+        let c1 = calculateFinalGrade(s.num, 'p1');
+        let c2 = calculateFinalGrade(s.num, 'p2');
+        let c3 = calculateFinalGrade(s.num, 'p3'); 
+        
+        let reprobados = 0;
+        if(c1 < 6) reprobados++;
+        if(parcial !== 'p1' && c2 < 6) reprobados++;
+        if(parcial === 'p3' && c3 < 6) reprobados++;
+        
+        let sumaPuntos = c1 + (parcial === 'p1' ? 0 : c2) + (parcial === 'p3' ? c3 : 0);
+        let riesgoMsg = "";
+
+        if(parcial === 'p2' || parcial === 'p3') {
+            if(reprobados >= 2) riesgoMsg = `<span class="risk-alert">⚠️ EXTRAORDINARIO<br>(2 REPROBADOS)</span>`;
+            else if(parcial === 'p3' && sumaPuntos < 18) riesgoMsg = `<span class="risk-alert">⚠️ EXTRAORDINARIO<br>(MENOS DE 18 pts)</span>`;
+            else if(parcial === 'p2' && (c1 + c2) < 8) riesgoMsg = `<span class="risk-alert">⚠️ ALTO RIESGO<br>(DIFÍCIL LLEGAR A 18)</span>`;
+        }
+
+        html += `<tr><td>${s.num}</td><td><b>${s.name}</b></td>${critCells}<td><input type="number" class="grade-input extra-input" value="${extra}" onchange="updateExtraPoints('${s.num}',this.value)"></td><td style="text-align:center; font-weight:800;">${finalConExtra.toFixed(1)}</td><td class="${califFinal<6?'reprobado-cell':''}" style="text-align:center; font-weight:900;">${califFinal}</td><td style="vertical-align: middle;">${riesgoMsg}</td></tr>`;
     });
     document.getElementById("resumenTableContainer").innerHTML = html + "</tbody></table>";
     setTimeout(() => { $('#resumenTable').DataTable({ paging: false, scrollX: true }); }, 10);
 }
 
 function updateManualGrade(cName, sNum, val) { 
-    if(!data.groups[currentGroup].manualGrades[cName]) data.groups[currentGroup].manualGrades[cName] = {};
-    data.groups[currentGroup].manualGrades[cName][sNum] = val; saveData(); renderResumenTable(); 
+    let parcial = document.getElementById("p_resumen").value;
+    if(!data.groups[currentGroup].manualGrades[parcial][cName]) data.groups[currentGroup].manualGrades[parcial][cName] = {};
+    data.groups[currentGroup].manualGrades[parcial][cName][sNum] = val; saveData(); renderResumenTable(); 
 }
 function updateExtraPoints(sNum, val) {
-    if(!data.groups[currentGroup].extraPoints) data.groups[currentGroup].extraPoints = {};
-    data.groups[currentGroup].extraPoints[sNum] = val; saveData(); renderResumenTable();
+    let parcial = document.getElementById("p_resumen").value;
+    data.groups[currentGroup].extraPoints[parcial][sNum] = val; saveData(); renderResumenTable();
 }
 
 function exportGradesPDF() {
     const { jsPDF } = window.jspdf;
     let doc = new jsPDF('l', 'mm', 'a4');
-    let group = data.groups[currentGroup];
-    let docente = sessionStorage.getItem("docenteName") || "DOCENTE";
+    let parcial = document.getElementById("p_resumen").value;
 
-    doc.setFontSize(14);
-    doc.text(`RESUMEN DE EVALUACIÓN - GRUPO: ${currentGroup}`, 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Docente: ${docente}`, 14, 22);
+    let headerInfo = addPdfHeaders(doc, currentGroup);
+    let ty = headerInfo.endY;
 
+    doc.setFontSize(14); doc.setFont("helvetica", "bold");
+    doc.text(`RESUMEN DE EVALUACIÓN (${parcial.toUpperCase()}) - GRUPO: ${currentGroup}`, headerInfo.textX, ty);
+    
     doc.autoTable({
         html: '#resumenTable',
-        startY: 30,
+        startY: ty + 5,
         theme: 'grid',
         styles: { fontSize: 8, halign: 'center' },
-        headStyles: { fillColor: [79, 70, 229], textColor: 255 },
-        columnStyles: { 1: { halign: 'left' } },
         didParseCell: function(data) {
             if (data.cell.raw.getElementsByTagName) {
                 let input = data.cell.raw.getElementsByTagName('input')[0];
@@ -763,116 +1247,77 @@ function exportGradesPDF() {
             }
         }
     });
-
-    doc.save(`Calificaciones_${currentGroup}.pdf`);
+    let finalY = doc.lastAutoTable.finalY + 15;
+    if(finalY > 150) { doc.addPage(); finalY = 20; }
+    addCuatroFirmas(doc, finalY + 15);
+    doc.save(`Calificaciones_${parcial}_${currentGroup}.pdf`);
 }
 
 function exportGradesExcel() {
-    if(!currentGroup) return;
-    let group = data.groups[currentGroup];
-    let criterios = group.criterios || [];
-    let headers = ["No.", "Nombre del Alumno"];
-    criterios.forEach(c => headers.push(`${c.name} (${c.pct}%)`));
-    headers.push("PUNTOS EXTRA", "PROMEDIO", "CALIF. FINAL");
-
-    let rows = group.students.map(s => {
-        let rowData = [s.num, s.name];
-        let final = 0;
-        criterios.forEach(c => {
-            let valor = 0;
-            if(c.isAct) {
-                let suma = 0;
-                let actsDelRubro = group.activities.filter(a => a.rubro === c.name);
-                actsDelRubro.forEach(act => {
-                    let v = (act.grades[s.num] || "").trim().toUpperCase();
-                    let n = (v === "" || v === "L") ? 0 : (parseFloat(v) || 0);
-                    suma += n;
-                });
-                valor = actsDelRubro.length > 0 ? (suma / actsDelRubro.length) : 0;
-            } else {
-                valor = parseFloat(group.manualGrades[c.name][s.num]) || 0;
-            }
-            rowData.push(valor.toFixed(1));
-            final += (valor * (c.pct / 100));
-        });
-
-        let extra = parseFloat(group.extraPoints[s.num]) || 0;
-        let finalConExtra = Math.min(final + extra, 10);
-        let califFinal = finalConExtra < 6.0 ? 5 : Math.round(finalConExtra);
-        rowData.push(extra, finalConExtra.toFixed(1), califFinal);
-        return rowData;
-    });
-
-    let wb = XLSX.utils.book_new();
-    let ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    XLSX.utils.book_append_sheet(wb, ws, "Calificaciones");
+    let table = document.getElementById("resumenTable");
+    let wb = XLSX.utils.table_to_book(table, {sheet: "Resumen"});
     XLSX.writeFile(wb, `Calificaciones_${currentGroup}.xlsx`);
 }
 
 function renderSeguimiento() {
     if(!currentGroup) return;
-    let group = data.groups[currentGroup];
-    let mFaltas = parseInt(document.getElementById("minFaltas").value) || 0;
-    let mActs = parseInt(document.getElementById("minActs").value) || 0;
-
-    let html = `<table id="seguimientoTable"><thead><tr>
-        <th style="width:200px">Nombre del Alumno</th>
-        <th>Tipo Problemática</th>
-        <th>Estrategia de Seguimiento</th>
-        <th>No. Reporte</th>
-    </tr></thead><tbody>`;
-    
+    let group = data.groups[currentGroup], mFaltas = parseInt(document.getElementById("minFaltas").value) || 0, mActs = parseInt(document.getElementById("minActs").value) || 0, parcialSeg = document.getElementById("p_seguimiento").value;
+    let html = `<table id="seguimientoTable"><thead><tr><th>Nombre</th><th>Tipo</th><th>Estrategia</th><th>No. Reporte</th></tr></thead><tbody>`;
     group.students.forEach(s => {
-        let faltas = 0;
-        Object.values(group.attendance).forEach(dia => { if(dia[s.num] && !dia[s.num].present) faltas++; });
-        let pendsNombres = [];
-        group.activities.forEach(act => { 
-            let v = (act.grades[s.num] || "").trim().toUpperCase();
-            if(v === "" || v === "L") pendsNombres.push(act.name);
-        });
-
-        if(faltas >= mFaltas || pendsNombres.length >= mActs) {
-            html += `<tr data-num="${s.num}">
-                <td class="st-nombre"><b>${s.name}</b></td>
-                <td>
-                    <select class="st-tipo">
-                        <option value="ACADEMICO">Académico</option>
-                        <option value="CONDUCTUAL">Conductual</option>
-                    </select>
-                </td>
-                <td><input type="text" class="st-estrategia" placeholder="Escribe estrategia aquí..."></td>
-                <td><input type="text" class="st-reporte" style="width:50px"></td>
-                <td class="st-data-auto" style="display:none">Faltas: ${faltas}. Pendientes: ${pendsNombres.join(', ') || 'Ninguna'}</td>
-            </tr>`;
+        let faltas = 0; Object.values(group.attendance).forEach(dia => { if(dia[s.num] && !dia[s.num].present) faltas++; });
+        let pends = []; (group.activities[parcialSeg] || []).forEach(act => { let v = (act.grades[s.num] || "").trim().toUpperCase(); if(v === "" || v === "L") pends.push(act.name); });
+        if(faltas >= mFaltas || pends.length >= mActs) {
+            html += `<tr><td class="st-nombre"><b>${s.name}</b></td><td><select class="st-tipo"><option value="ACADEMICO">Académico</option><option value="CONDUCTUAL">Conductual</option></select></td><td><input type="text" class="st-estrategia" placeholder="Estrategia..."></td><td><input type="text" class="st-reporte" style="width:50px"></td><td class="st-data-auto" style="display:none">Faltas: ${faltas}. Pendientes: ${pends.join(', ')}</td></tr>`;
         }
     });
     document.getElementById("seguimientoTableContainer").innerHTML = html + "</tbody></table>";
 }
 
+// Busca la función exportSeguimientoPDF en tu código y reemplázala por esta:
+
 function exportSeguimientoPDF() {
     const { jsPDF } = window.jspdf;
     let doc = new jsPDF('l', 'mm', 'a4');
-    let group = data.groups[currentGroup];
-    let docente = sessionStorage.getItem("docenteName") || "NO REGISTRADO";
-    let semana = document.getElementById("segSemana").value || "____/____/____";
-    let uac = document.getElementById("uacNombre").value || "_________________________";
+    let docente = data.docenteName || "NO REGISTRADO";
+    let uac = document.getElementById("uacNombre").value || data.uac || "_________________________";
+    
+    // --- LÓGICA DE SEMANA AUTOMÁTICA ---
+    let fechaInput = document.getElementById("segSemana").value;
+    let semanaTexto = "____/____/____";
+    
+    if (fechaInput) {
+        let fechaSel = new Date(fechaInput + 'T00:00:00');
+        let diaSemana = fechaSel.getDay(); // 0 es domingo, 1 lunes...
+        
+        // Ajustar al lunes (si es domingo(0), restamos 6. Si es otro, restamos dia-1)
+        let diffLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
+        let lunes = new Date(fechaSel);
+        lunes.setDate(fechaSel.getDate() + diffLunes);
+        
+        // El viernes es lunes + 4 días
+        let viernes = new Date(lunes);
+        viernes.setDate(lunes.getDate() + 4);
+        
+        const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        semanaTexto = `DEL ${lunes.toLocaleDateString('es-MX', opciones)} AL ${viernes.toLocaleDateString('es-MX', opciones)}`;
+    }
+    // ----------------------------------
 
-    doc.setFontSize(10); doc.setFont("helvetica", "bold");
-    doc.text("CENTRO DE BACHILLERATO TECNOLÓGICO NO. 5 HUEHUETOCA", 148, 10, {align: "center"});
-    doc.text("Subdirección académica", 148, 15, {align: "center"});
-    doc.setFontSize(9); doc.setFont("helvetica", "normal");
-    doc.text("Ciclo escolar 2025-2026", 148, 20, {align: "center"});
-    doc.setFont("helvetica", "bold"); doc.text("FORMATO DE SEGUIMIENTO", 148, 25, {align: "center"});
+    let headerInfo = addPdfHeaders(doc, currentGroup);
+    let ty = headerInfo.endY;
 
-    doc.setFontSize(9);
-    doc.text(`Docente: ${docente}`, 15, 35);
-    doc.text(`UAC (Materia): ${uac}`, 15, 40);
-    doc.text(`Grado/Grupo: ${currentGroup}`, 15, 45);
-    doc.text(`Semana: ${semana}`, 15, 50);
+    doc.setFontSize(10); 
+    doc.setFont("helvetica", "bold"); 
+    doc.text("SISTEMA DE SEGUIMIENTO ACADÉMICO", 148, ty, {align: "center"});
+    
+    doc.setFontSize(9); 
+    doc.text(`Docente: ${docente}`, headerInfo.textX, ty + 10); 
+    doc.text(`UAC (Materia): ${uac}`, headerInfo.textX, ty + 15); 
+    doc.text(`Grado/Grupo: ${currentGroup}`, headerInfo.textX, ty + 20); 
+    doc.text(`Semana: ${semanaTexto}`, headerInfo.textX, ty + 25); // Aquí se aplica el cambio
 
     let bodyRows = [];
-    const filasPantalla = document.querySelectorAll("#seguimientoTable tbody tr");
-    filasPantalla.forEach(tr => {
+    document.querySelectorAll("#seguimientoTable tbody tr").forEach(tr => {
         bodyRows.push([
             tr.querySelector(".st-nombre").innerText, 
             (tr.querySelector(".st-tipo").value === "ACADEMICO" ? "X" : ""), 
@@ -883,32 +1328,32 @@ function exportSeguimientoPDF() {
             tr.querySelector(".st-reporte").value
         ]);
     });
-    while(bodyRows.length < 5) bodyRows.push(["", "", "", "", "", "", ""]);
+    
+    if (bodyRows.length === 0) {
+        bodyRows.push(["No se detectaron alumnos con los criterios seleccionados", "", "", "", "", "", ""]);
+    }
 
     doc.autoTable({
-        startY: 55,
+        startY: ty + 30, 
         head: [
-            [{content: 'Nombre del alumno.', rowSpan: 2}, {content: 'Problemática identificada.', colSpan: 2}, {content: 'SEGUIMIENTO', colSpan: 4}],
+            [{content:'INDIVIDUAL', rowSpan:2, styles:{valign:'middle'}}, {content:'Problemática identificada.', colSpan:2}, {content:'SEGUIMIENTO', colSpan:4}],
             ['Académico.', 'Conductual.', 'Firma del alumno.', 'Estrategia de seguimiento.', 'Observaciones.', 'No. de reporte.']
         ],
-        body: bodyRows,
-        theme: 'grid',
-        styles: { fontSize: 7, halign: 'center', textColor: 0, lineWidth: 0.1, cellPadding: 2 },
-        headStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' },
-        columnStyles: { 0: { halign: 'left', cellWidth: 50 }, 4: { halign: 'left', cellWidth: 50 }, 5: { halign: 'left', cellWidth: 70 } }
+        body: bodyRows, 
+        theme: 'grid', 
+        styles: { fontSize: 7, halign: 'center', textColor: 0, lineWidth: 0.1, cellPadding: 2 }, 
+        headStyles: { fillColor: [255, 255, 255], textColor: 0, fontStyle: 'bold', lineWidth: 0.1 }, 
+        columnStyles: { 0: { halign: 'left', cellWidth: 45 }, 4: { halign: 'left', cellWidth: 50 }, 5: { halign: 'left', cellWidth: 75 } }
     });
 
-    let finalY = doc.lastAutoTable.finalY + 20;
-    doc.line(15, finalY, 75, finalY); doc.text("Orientador(a)", 45, finalY + 5, {align:"center"});
-    doc.line(110, finalY, 180, finalY); doc.text("Firma del Docente", 145, finalY + 5, {align:"center"});
-    doc.line(220, finalY, 280, finalY); doc.text("Subdirección Académica", 250, finalY + 5, {align:"center"});
+    let finalY = doc.lastAutoTable.finalY + 15;
+    if(finalY > 150) { doc.addPage(); finalY = 20; }
+    addCuatroFirmas(doc, finalY + 15);
     doc.save(`Seguimiento_${currentGroup}.pdf`);
 }
-
 function generateReport(){
-    let start = document.getElementById("startDate").value;
-    let end = document.getElementById("endDate").value;
-    let group = data.groups[currentGroup];
+    let start = document.getElementById("startDate").value, end = document.getElementById("endDate").value, group = data.groups[currentGroup];
+    if(!group) return alert("Seleccione un grupo");
     let dates = Object.keys(group.attendance).filter(d => d >= start && d <= end).sort();
     let html = `<table id="reportDataTable" class="display cell-border" style="width:100%"><thead><tr><th>No.</th><th>Nombre</th>${dates.map(d => `<th>${d}</th>`).join('')}<th>% Asist.</th></tr></thead><tbody>`;
     group.students.forEach(s => {
@@ -916,10 +1361,7 @@ function generateReport(){
         dates.forEach(d => {
             let r = group.attendance[d][s.num];
             if(r && r.present) { p++; row += `<td style="color:green; font-weight:bold; text-align:center">A</td>`; }
-            else { 
-                let razon = (r && r.obs) ? `F - ${r.obs}` : 'F';
-                row += `<td style="color:red; text-align:center; font-size: 0.8rem;">${razon}</td>`; 
-            }
+            else row += `<td style="color:red; text-align:center; font-size: 0.8rem;">${(r && r.obs) ? `F - ${r.obs}` : 'F'}</td>`;
         });
         html += row + `<td style="font-weight:800; text-align:center">${dates.length?((p/dates.length)*100).toFixed(0):0}%</td></tr>`;
     });
@@ -928,17 +1370,123 @@ function generateReport(){
     setTimeout(() => { $('#reportDataTable').DataTable({ paging: false, scrollX: true }); }, 10);
 }
 
-function exportPDF(){
-    const { jsPDF } = window.jspdf; let doc = new jsPDF('l');
-    doc.text(`ASISTENCIA - ${currentGroup}`, 14, 15);
-    doc.autoTable({ html: '#reportDataTable', startY: 20, styles: { fontSize: 6 } });
-    doc.save(`Asistencia_${currentGroup}.pdf`);
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    let doc = new jsPDF('l', 'mm', 'a4');
+    
+    let headerInfo = addPdfHeaders(doc, currentGroup);
+    let ty = headerInfo.endY;
+
+    doc.setFontSize(14); doc.setFont("helvetica", "bold");
+    doc.text(`REPORTE DE ASISTENCIAS - GRUPO: ${currentGroup}`, headerInfo.textX, ty);
+    doc.autoTable({ html: '#reportDataTable', startY: ty + 5, theme: 'grid', styles: { fontSize: 7, halign: 'center' } });
+    let finalY = doc.lastAutoTable.finalY + 15;
+    if(finalY > 150) { doc.addPage(); finalY = 20; }
+    addCuatroFirmas(doc, finalY + 15);
+    doc.save(`Asistencias_${currentGroup}.pdf`);
+}
+
+function exportExcel() {
+    let table = document.getElementById("reportDataTable");
+    let wb = XLSX.utils.table_to_book(table, {sheet: "Asistencias"});
+    XLSX.writeFile(wb, `Asistencias_${currentGroup}.xlsx`);
+}
+
+function renderReporteSemestral() {
+    if(!currentGroup) return;
+    let group = data.groups[currentGroup];
+    let horasSem = parseFloat(document.getElementById("horasSemestre").value) || 1;
+    
+    let allDates = Object.keys(group.attendance).sort();
+    let p1Dates = allDates.filter((d, i) => i < allDates.length / 3);
+    let p2Dates = allDates.filter((d, i) => i >= allDates.length / 3 && i < (allDates.length / 3) * 2);
+    let p3Dates = allDates.filter((d, i) => i >= (allDates.length / 3) * 2);
+
+    let html = `<table id="semestralTable" class="display cell-border" style="width:100%">
+        <thead>
+            <tr>
+                <th rowspan="2" class="semestral-header">No.</th>
+                <th rowspan="2" class="semestral-header">Nombre del Alumno</th>
+                <th colspan="4" class="semestral-header" style="text-align:center">FALTAS E INASISTENCIA</th>
+                <th colspan="4" class="semestral-header" style="text-align:center">CALIFICACIONES</th>
+            </tr>
+            <tr>
+                <th>P1</th><th>P2</th><th>P3</th><th style="background:#fee2e2">TOTAL / %</th>
+                <th>P1</th><th>P2</th><th>P3</th><th class="final-prom-cell">PROMEDIO FINAL</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    group.students.forEach(s => {
+        // Inicializamos contadores por parcial
+        let faltasP1 = 0, faltasP2 = 0, faltasP3 = 0;
+        
+        let totalFaltas = f1 + f2 + f3;
+        let pctInasistencia = ((totalFaltas / horasSem) * 100).toFixed(1);
+
+        let c1 = calculateFinalGrade(s.num, 'p1');
+        let c2 = calculateFinalGrade(s.num, 'p2');
+        let c3 = calculateFinalGrade(s.num, 'p3');
+
+        let reprobadosCount = 0;
+        if(c1 < 6) reprobadosCount++;
+        if(c2 < 6) reprobadosCount++;
+        if(c3 < 6) reprobadosCount++;
+
+        let promedioMatematico = (c1 + c2 + c3) / 3;
+        let finalFinal = Math.round(promedioMatematico);
+
+        if(reprobadosCount >= 2) finalFinal = 5;
+        if(finalFinal < 5) finalFinal = 5;
+
+        html += `<tr>
+            <td>${s.num}</td>
+            <td><b>${s.name}</b></td>
+            <td style="text-align:center">${f1}</td>
+            <td style="text-align:center">${f2}</td>
+            <td style="text-align:center">${f3}</td>
+            <td style="text-align:center; font-weight:800; color:red">${totalFaltas} / ${pctInasistencia}%</td>
+            <td style="text-align:center" class="${c1<6?'reprobado-cell':''}">${c1}</td>
+            <td style="text-align:center" class="${c2<6?'reprobado-cell':''}">${c2}</td>
+            <td style="text-align:center" class="${c3<6?'reprobado-cell':''}">${c3}</td>
+            <td style="text-align:center" class="final-prom-cell ${finalFinal<6?'reprobado-cell':''}">${finalFinal}</td>
+        </tr>`;
+
+    });
+
+    document.getElementById("semestralTableContainer").innerHTML = html + "</tbody></table>";
+}
+
+function exportSemestralPDF() {
+    const { jsPDF } = window.jspdf;
+    let doc = new jsPDF('l', 'mm', 'a4');
+    let uac = data.uac || "S/N";
+    let horas = document.getElementById("horasSemestre").value;
+
+    let headerInfo = addPdfHeaders(doc, currentGroup);
+    let ty = headerInfo.endY;
+
+    doc.setFontSize(14); doc.setFont("helvetica", "bold");
+    doc.text("REPORTE CONSOLIDADO SEMESTRAL", 148, ty, {align: "center"});
+    doc.setFontSize(10); doc.setFont("helvetica", "normal");
+    doc.text(`UAC: ${uac} | GRUPO: ${currentGroup} | TOTAL HORAS SEMESTRE: ${horas}`, 148, ty + 7, {align: "center"});
+
+    doc.autoTable({
+        html: '#semestralTable',
+        startY: ty + 15,
+        theme: 'grid',
+        styles: { fontSize: 8, halign: 'center' },
+        headStyles: { fillColor: [30, 41, 59] }
+    });
+    let finalY = doc.lastAutoTable.finalY + 15;
+    if(finalY > 150) { doc.addPage(); finalY = 20; }
+    addCuatroFirmas(doc, finalY + 15);
+    doc.save(`Reporte_Semestral_${currentGroup}.pdf`);
 }
 
 function fullBackup(){
     let blob = new Blob([JSON.stringify(data)], {type:"application/json"});
-    let a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-    a.download = `CBT5_Respaldo.json`; a.click();
+    let a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `CBT5_Respaldo.json`; a.click();
 }
 
 function restoreBackup(event){
@@ -947,9 +1495,21 @@ function restoreBackup(event){
     reader.readAsText(event.target.files[0]);
 }
 
+function wipeAllData() {
+    if(confirm("⚠️ ADVERTENCIA CRÍTICA ⚠️\n\n¿Estás seguro de que deseas borrar ABSOLUTAMENTE TODO? Esta acción no se puede deshacer y perderás todos los grupos, alumnos, asistencias y configuraciones.")) {
+        if(confirm("¿Estás REALMENTE seguro? Esta es la última oportunidad para cancelar.")) {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert("Sistema reiniciado con éxito.");
+            location.reload();
+        }
+    }
+}
+
 window.onload = () => {
-    if(!data.user) { document.getElementById('register-section').style.display = "block"; }
-    else { if(sessionStorage.getItem("isLoggedIn") === "true") { showApp(); } else { document.getElementById('login-section').style.display = "block"; } }
+    if(!data.username) document.getElementById('register-section').style.display = "block";
+    else if(sessionStorage.getItem("isLoggedIn") === "true") showApp();
+    else document.getElementById('login-section').style.display = "block";
     loadSelectors();
     document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
 };
